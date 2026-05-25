@@ -39,6 +39,27 @@ function escapeHtml(texto) {
   return escaparHtml(texto);
 }
 
+function mostrarFeedbackCadastro(mensagem, tipo = "sucesso") {
+  let caixa = document.getElementById("feedbackCadastro");
+
+  if (!caixa) {
+    caixa = document.createElement("div");
+    caixa.id = "feedbackCadastro";
+    caixa.className = "feedback-cadastro";
+    document.body.prepend(caixa);
+  }
+
+  caixa.className = `feedback-cadastro feedback-${tipo}`;
+  caixa.innerHTML = mensagem;
+  caixa.style.display = "block";
+
+  caixa.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  setTimeout(() => {
+    caixa.classList.add("feedback-visivel");
+  }, 10);
+}
+
 function normalizarTextoCodigo(texto) {
   return String(texto || "")
     .normalize("NFD")
@@ -277,6 +298,62 @@ async function sincronizarItensComGoogleSheets(itens) {
   }
 
   return resultados;
+}
+
+async function carregarItensDoGoogleSheets() {
+  if (!URL_WEB_APP || URL_WEB_APP.includes("COLE_AQUI")) {
+    throw new Error("URL_WEB_APP nao configurada.");
+  }
+
+  const resposta = await fetch(URL_WEB_APP + "?action=listar");
+  const texto = await resposta.text();
+
+  try {
+    return JSON.parse(texto);
+  } catch (erro) {
+    console.error("Resposta nao JSON do Google Sheets:", texto);
+    throw erro;
+  }
+}
+
+async function substituirEstoqueLocalPorPlanilha() {
+  try {
+    const itensPlanilha = await carregarItensDoGoogleSheets();
+
+    if (!Array.isArray(itensPlanilha)) {
+      alert("A resposta da planilha nao e uma lista de itens.");
+      console.warn("Resposta recebida:", itensPlanilha);
+      return;
+    }
+
+    const itensNormalizados = itensPlanilha
+      .filter(item => item && (item.codigo || item.codigoLeitura || item.nome))
+      .map(item => normalizarItem({
+        ...item,
+        sincronizado: true
+      }));
+
+    if (!itensNormalizados.length) {
+      alert("Nenhum item valido encontrado na planilha.");
+      return;
+    }
+
+    const confirmar = confirm(
+      `Foram encontrados ${itensNormalizados.length} itens na planilha.\n\n` +
+      "Deseja substituir o estoque local pelos dados da planilha?"
+    );
+
+    if (!confirmar) return;
+
+    salvarEstoque(itensNormalizados);
+
+    alert(`${itensNormalizados.length} itens carregados da planilha para o sistema.`);
+
+    location.reload();
+  } catch (erro) {
+    console.error("Erro ao carregar dados da planilha:", erro);
+    alert("Nao foi possivel carregar os dados da planilha. Veja o console.");
+  }
 }
 
 function buscarItemPorCodigo(valor) {
@@ -784,6 +861,7 @@ function configurarFormularioCadastro() {
       const dados = await dadosDoFormulario(form);
 
       if (!dados.nome) {
+        mostrarFeedbackCadastro("Informe o nome do item para concluir o cadastro.", "erro");
         alert("Informe o nome do item.");
         return;
       }
@@ -795,33 +873,58 @@ function configurarFormularioCadastro() {
 
       adicionarItensEstoque(itens);
 
-      let mensagem =
+      console.log("Itens criados localmente:", itens);
+
+      const listaCodigos = itens
+        .map(item => `<code>${escaparHtml(item.codigo)}</code>`)
+        .join(", ");
+
+      mostrarFeedbackCadastro(
         itens.length === 1
-          ? `Registro salvo localmente: ${itens[0].codigo}`
-          : `${itens.length} registros salvos localmente:\n\n${itens.map(i => i.codigo).join("\n")}`;
-
-      try {
-        const resultados = await sincronizarItensComGoogleSheets(itens);
-        const enviados = resultados.filter(r => r.ok).length;
-        const falhas = resultados.length - enviados;
-
-        if (falhas === 0) {
-          mensagem += "\n\nGoogle Sheets atualizado com sucesso.";
-        } else {
-          mensagem += `\n\n${enviados} enviados ao Google Sheets. ${falhas} ficaram apenas locais. Veja o console.`;
-        }
-      } catch (erro) {
-        console.error("Erro geral na sincronizacao com Google Sheets:", erro);
-        mensagem += "\n\nOs registros foram salvos localmente, mas nao foram enviados para a planilha.";
-      }
-
-      alert(mensagem);
+          ? `✅ Registro salvo localmente: <strong>${escaparHtml(itens[0].codigo)}</strong><br>Enviando para a planilha...`
+          : `✅ ${itens.length} registros criados:<br>${listaCodigos}<br><br>Enviando para o Google Sheets...`,
+        "info"
+      );
 
       form.reset();
       configurarTipoPorUrl();
 
+      try {
+        const resultados = await sincronizarItensComGoogleSheets(itens);
+        console.log("Resultado da sincronização Google Sheets:", resultados);
+
+        const enviados = resultados.filter(r => r.ok).length;
+        const falhas = resultados.length - enviados;
+
+        if (falhas === 0) {
+          mostrarFeedbackCadastro(
+            itens.length === 1
+              ? `✅ Cadastro concluído.<br><strong>${escaparHtml(itens[0].codigo)}</strong> foi salvo no sistema e enviado para o Google Sheets.`
+              : `✅ Cadastro concluído.<br><strong>${itens.length} registros</strong> foram salvos no sistema e enviados para o Google Sheets.`,
+            "sucesso"
+          );
+        } else if (enviados === 0) {
+          mostrarFeedbackCadastro(
+            "⚠️ Registro salvo localmente, mas não foi possível enviar para o Google Sheets agora.<br>Os dados não foram perdidos.",
+            "aviso"
+          );
+        } else {
+          mostrarFeedbackCadastro(
+            `⚠️ Cadastro salvo localmente.<br>${enviados} enviados ao Google Sheets. ${falhas} ficaram pendentes de sincronização.`,
+            "aviso"
+          );
+        }
+      } catch (erro) {
+        console.error("Erro geral na sincronização com Google Sheets:", erro);
+        mostrarFeedbackCadastro(
+          "⚠️ Registro salvo localmente, mas não foi possível enviar para o Google Sheets agora.<br>Os dados não foram perdidos.",
+          "aviso"
+        );
+      }
+
     } catch (erro) {
       console.error("Erro ao salvar registro:", erro);
+      mostrarFeedbackCadastro("Não foi possível concluir o cadastro. Veja o console para detalhes.", "erro");
       alert("Erro ao salvar registro. Veja o console.");
     }
   });
@@ -2707,6 +2810,8 @@ function configurarBotoesGlobais() {
   $("#configurarImpressora")?.addEventListener("click", configurarImpressoraTermica);
   $("#configurarImpressoraTermica")?.addEventListener("click", configurarImpressoraTermica);
 
+  $("#carregarDaPlanilha")?.addEventListener("click", substituirEstoqueLocalPorPlanilha);
+
   $("#testeImpressaoSimples")?.addEventListener("click", testeImpressaoSimples);
   $("#testeCodigoBarras")?.addEventListener("click", testarEtiquetaCodigo);
   $("#testeCodigoBarrasCode39")?.addEventListener("click", testarEtiquetaCode39);
@@ -2778,7 +2883,10 @@ window.lucimarEstoque = {
   atribuirCodigoLeitura,
   enviarItemParaGoogleSheets,
   sincronizarItensComGoogleSheets,
+  carregarItensDoGoogleSheets,
+  substituirEstoqueLocalPorPlanilha,
   marcarItemSincronizado,
+  mostrarFeedbackCadastro,
   normalizarCodigoBusca,
   normalizarPrecoVenda,
   formatarMoedaBR,

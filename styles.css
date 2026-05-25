@@ -529,6 +529,50 @@ th {
   flex-wrap: wrap;
 }
 
+.feedback-cadastro {
+  max-width: 960px;
+  margin: 16px auto;
+  padding: 16px 20px;
+  border-radius: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.10);
+  border: 1px solid rgba(0,0,0,0.08);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 999;
+}
+
+.feedback-cadastro.feedback-visivel {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.feedback-sucesso {
+  background: #eef7e8;
+  color: #2f4f2f;
+  border-color: rgba(47, 79, 47, 0.22);
+}
+
+.feedback-aviso {
+  background: #fff7df;
+  color: #73530d;
+  border-color: rgba(115, 83, 13, 0.22);
+}
+
+.feedback-erro {
+  background: #fdecec;
+  color: #7a2222;
+  border-color: rgba(122, 34, 34, 0.22);
+}
+
+.feedback-info {
+  background: #eef4fb;
+  color: #243f5c;
+  border-color: rgba(36, 63, 92, 0.22);
+}
+
 @media (max-width: 880px) {
   .hero-panel,
   .hero-panel.compact,
