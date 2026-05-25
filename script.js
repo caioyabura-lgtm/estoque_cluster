@@ -8,9 +8,15 @@ const STORAGE_KEY = "estoque_lucimar";
 const CONFIG_ETIQUETA_KEY = "configEtiquetaTermica";
 const IMPRESSORA_KEY = "impressoraTermica";
 const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxfrYrGWJnAqIffnhASCNpXZFEbfT-ktUfwZwTkHRXZIlu33QH9BIXKfYtaaX7ib9aAZQ/exec";
+const USAR_GOOGLE_SHEETS_COMO_BANCO = true;
 
 const RESPONSAVEL_LEGAL = "LUCIMAR MARIA RODRIGUES";
 const CNPJ_RESPONSAVEL = "CNPJ 31.567.085/0001-18";
+
+let estoqueOnline = [];
+let ultimaSincronizacaoSheets = null;
+let renderizarDashboard = null;
+let estoqueOnlineCarregado = false;
 
 /* ==========================================================
    UTILITÁRIOS BÁSICOS
@@ -58,6 +64,18 @@ function mostrarFeedbackCadastro(mensagem, tipo = "sucesso") {
   setTimeout(() => {
     caixa.classList.add("feedback-visivel");
   }, 10);
+}
+
+function mostrarStatusSistema(mensagem, tipo = "info") {
+  const el = document.getElementById("statusBancoOnline") || document.getElementById("feedbackCadastro");
+
+  if (!el) {
+    console.log(`[${tipo}] ${mensagem}`);
+    return;
+  }
+
+  el.textContent = mensagem;
+  el.className = `status-banco-online status-${tipo}`;
 }
 
 function normalizarTextoCodigo(texto) {
@@ -162,8 +180,33 @@ function formatarPrecoEstoque(item = {}) {
    LOCALSTORAGE
    ========================================================== */
 
-function carregarEstoque() {
+function definirEstoqueOnline(itens) {
+  estoqueOnline = Array.isArray(itens)
+    ? itens.map(item => normalizarItem({ ...item, sincronizado: true }))
+    : [];
+
+  estoqueOnlineCarregado = true;
+  ultimaSincronizacaoSheets = new Date().toISOString();
+
   try {
+    localStorage.setItem("lucimar_ultimo_cache_sheets", JSON.stringify(estoqueOnline));
+    localStorage.setItem("lucimar_ultima_sincronizacao_sheets", ultimaSincronizacaoSheets);
+  } catch (erro) {
+    console.warn("Nao foi possivel salvar cache local do Google Sheets:", erro);
+  }
+}
+
+function carregarEstoque() {
+  if (USAR_GOOGLE_SHEETS_COMO_BANCO && Array.isArray(estoqueOnline) && (estoqueOnlineCarregado || estoqueOnline.length)) {
+    return estoqueOnline.map(normalizarItem);
+  }
+
+  try {
+    const cacheSheets = JSON.parse(localStorage.getItem("lucimar_ultimo_cache_sheets") || "[]");
+    if (USAR_GOOGLE_SHEETS_COMO_BANCO && Array.isArray(cacheSheets) && cacheSheets.length) {
+      return cacheSheets.map(normalizarItem);
+    }
+
     const dados = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
     return Array.isArray(dados) ? dados.map(normalizarItem) : [];
   } catch (erro) {
@@ -316,6 +359,59 @@ async function carregarItensDoGoogleSheets() {
   }
 }
 
+async function atualizarItemNoGoogleSheets(item) {
+  if (!URL_WEB_APP || URL_WEB_APP.includes("COLE_AQUI")) {
+    throw new Error("URL_WEB_APP nao configurada.");
+  }
+
+  const resposta = await fetch(URL_WEB_APP, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "atualizar",
+      ...item
+    })
+  });
+
+  const texto = await resposta.text();
+
+  try {
+    return JSON.parse(texto);
+  } catch (erro) {
+    console.error("Resposta nao JSON ao atualizar item:", texto);
+    throw erro;
+  }
+}
+
+async function atualizarEstoqueDoGoogleSheets({ renderizar = true } = {}) {
+  mostrarStatusSistema?.("Carregando dados do Google Sheets...", "info");
+
+  try {
+    const itens = await carregarItensDoGoogleSheets();
+
+    if (!Array.isArray(itens)) {
+      throw new Error("Resposta da planilha nao e uma lista.");
+    }
+
+    definirEstoqueOnline(itens);
+
+    if (renderizar) {
+      if (typeof renderizarDashboard === "function") {
+        renderizarDashboard();
+      } else if (!document.body.dataset.dashboardConfigurado && typeof configurarDashboard === "function") {
+        configurarDashboard();
+      }
+    }
+
+    mostrarStatusSistema?.(`${itens.length} itens carregados do Google Sheets.`, "sucesso");
+
+    return itens;
+  } catch (erro) {
+    console.error("Erro ao carregar Google Sheets:", erro);
+    mostrarStatusSistema?.("Nao foi possivel carregar o Google Sheets. Usando ultimo cache local, se existir.", "aviso");
+    return carregarEstoque();
+  }
+}
+
 async function substituirEstoqueLocalPorPlanilha() {
   try {
     const itensPlanilha = await carregarItensDoGoogleSheets();
@@ -345,11 +441,15 @@ async function substituirEstoqueLocalPorPlanilha() {
 
     if (!confirmar) return;
 
-    salvarEstoque(itensNormalizados);
+    definirEstoqueOnline(itensNormalizados);
 
     alert(`${itensNormalizados.length} itens carregados da planilha para o sistema.`);
 
-    location.reload();
+    if (typeof renderizarDashboard === "function") {
+      renderizarDashboard();
+    } else {
+      location.reload();
+    }
   } catch (erro) {
     console.error("Erro ao carregar dados da planilha:", erro);
     alert("Nao foi possivel carregar os dados da planilha. Veja o console.");
@@ -849,8 +949,8 @@ function configurarFormularioCadastro() {
   const form =
     $("#formRegistro") ||
     $("#formCadastro") ||
-    $("form[data-form='registro']") ||
-    $("form");
+    $("#formProduto") ||
+    $("form[data-form='registro']");
 
   if (!form) return;
 
@@ -871,18 +971,53 @@ function configurarFormularioCadastro() {
         sincronizado: false
       }));
 
-      adicionarItensEstoque(itens);
-
       console.log("Itens criados localmente:", itens);
 
       const listaCodigos = itens
         .map(item => `<code>${escaparHtml(item.codigo)}</code>`)
         .join(", ");
 
+      if (USAR_GOOGLE_SHEETS_COMO_BANCO) {
+        mostrarFeedbackCadastro(
+          itens.length === 1
+            ? `Enviando cadastro para Google Sheets:<br><strong>${escaparHtml(itens[0].codigo)}</strong>`
+            : `Enviando ${itens.length} cadastros para Google Sheets:<br>${listaCodigos}`,
+          "info"
+        );
+
+        const resultados = await sincronizarItensComGoogleSheets(itens);
+        console.log("Resultado da sincronização Google Sheets:", resultados);
+
+        const falhas = resultados.filter(r => !r.ok);
+
+        if (falhas.length) {
+          mostrarFeedbackCadastro(
+            `${falhas.length} item(ns) nao foram enviados. Veja o console.`,
+            "aviso"
+          );
+        } else {
+          mostrarFeedbackCadastro(
+            `${itens.length} item(ns) cadastrados no Google Sheets.<br>${listaCodigos}`,
+            "sucesso"
+          );
+          form.reset();
+          configurarTipoPorUrl();
+
+          try {
+            await atualizarEstoqueDoGoogleSheets({ renderizar: false });
+          } catch (erro) {
+            console.warn("Cadastro enviado, mas o cache online nao foi atualizado:", erro);
+          }
+        }
+        return;
+      }
+
+      adicionarItensEstoque(itens);
+
       mostrarFeedbackCadastro(
         itens.length === 1
-          ? `✅ Registro salvo localmente: <strong>${escaparHtml(itens[0].codigo)}</strong><br>Enviando para a planilha...`
-          : `✅ ${itens.length} registros criados:<br>${listaCodigos}<br><br>Enviando para o Google Sheets...`,
+          ? `Registro salvo localmente: <strong>${escaparHtml(itens[0].codigo)}</strong><br>Enviando para a planilha...`
+          : `${itens.length} registros criados:<br>${listaCodigos}<br><br>Enviando para o Google Sheets...`,
         "info"
       );
 
@@ -899,25 +1034,25 @@ function configurarFormularioCadastro() {
         if (falhas === 0) {
           mostrarFeedbackCadastro(
             itens.length === 1
-              ? `✅ Cadastro concluído.<br><strong>${escaparHtml(itens[0].codigo)}</strong> foi salvo no sistema e enviado para o Google Sheets.`
-              : `✅ Cadastro concluído.<br><strong>${itens.length} registros</strong> foram salvos no sistema e enviados para o Google Sheets.`,
+              ? `Cadastro concluido.<br><strong>${escaparHtml(itens[0].codigo)}</strong> foi salvo no sistema e enviado para o Google Sheets.`
+              : `Cadastro concluido.<br><strong>${itens.length} registros</strong> foram salvos no sistema e enviados para o Google Sheets.`,
             "sucesso"
           );
         } else if (enviados === 0) {
           mostrarFeedbackCadastro(
-            "⚠️ Registro salvo localmente, mas não foi possível enviar para o Google Sheets agora.<br>Os dados não foram perdidos.",
+            "Registro salvo localmente, mas nao foi possivel enviar para o Google Sheets agora.<br>Os dados nao foram perdidos.",
             "aviso"
           );
         } else {
           mostrarFeedbackCadastro(
-            `⚠️ Cadastro salvo localmente.<br>${enviados} enviados ao Google Sheets. ${falhas} ficaram pendentes de sincronização.`,
+            `Cadastro salvo localmente.<br>${enviados} enviados ao Google Sheets. ${falhas} ficaram pendentes de sincronizacao.`,
             "aviso"
           );
         }
       } catch (erro) {
         console.error("Erro geral na sincronização com Google Sheets:", erro);
         mostrarFeedbackCadastro(
-          "⚠️ Registro salvo localmente, mas não foi possível enviar para o Google Sheets agora.<br>Os dados não foram perdidos.",
+          "Registro salvo localmente, mas nao foi possivel enviar para o Google Sheets agora.<br>Os dados nao foram perdidos.",
           "aviso"
         );
       }
@@ -944,6 +1079,12 @@ function configurarDashboard() {
   const tabelaBody = $("#tabelaBody");
 
   if (!container && !tabelaBody) return;
+  if (document.body.dataset.dashboardConfigurado === "true") {
+    if (typeof renderizarDashboard === "function") renderizarDashboard();
+    return;
+  }
+
+  document.body.dataset.dashboardConfigurado = "true";
 
   const filtroTipo = $("#filtroTipo");
   const filtroBusca = $("#filtroBusca") || $("#filtroTexto");
@@ -1063,6 +1204,8 @@ function configurarDashboard() {
     }
   }
 
+  renderizarDashboard = render;
+
   filtroTipo?.addEventListener("change", render);
   filtroBusca?.addEventListener("input", render);
   filtroCategoria?.addEventListener("change", render);
@@ -1076,7 +1219,7 @@ function configurarDashboard() {
 
   $("#cancelarEdicao")?.addEventListener("click", limparFormularioEdicao);
 
-  $("#formEdicao")?.addEventListener("submit", event => {
+  $("#formEdicao")?.addEventListener("submit", async event => {
     event.preventDefault();
 
     const formEdicao = event.currentTarget;
@@ -1124,6 +1267,27 @@ function configurarDashboard() {
       historico
     };
 
+    if (USAR_GOOGLE_SHEETS_COMO_BANCO) {
+      try {
+        mostrarStatusSistema("Atualizando item no Google Sheets...", "info");
+        const resposta = await atualizarItemNoGoogleSheets(dadosAtualizados);
+
+        if (!resposta || resposta.ok === false) {
+          throw new Error(resposta?.erro || "Atualizacao sem confirmacao do Google Sheets.");
+        }
+
+        await atualizarEstoqueDoGoogleSheets({ renderizar: true });
+        mostrarStatusSistema("Item atualizado no Google Sheets.", "sucesso");
+        alert("Item atualizado com sucesso no Google Sheets.");
+        limparFormularioEdicao();
+      } catch (erro) {
+        console.error("Erro ao atualizar item no Google Sheets:", erro);
+        mostrarStatusSistema("Nao foi possivel atualizar o item no Google Sheets.", "erro");
+        alert("Nao foi possivel atualizar o item no Google Sheets. Veja o console.");
+      }
+      return;
+    }
+
     salvarItemEditado(codigoOriginal, dadosAtualizados);
     alert("Item atualizado com sucesso.");
     limparFormularioEdicao();
@@ -1140,6 +1304,11 @@ function configurarDashboard() {
     const btnExcluir = event.target.closest("[data-excluir]");
     if (btnExcluir) {
       const codigo = btnExcluir.dataset.excluir;
+      if (USAR_GOOGLE_SHEETS_COMO_BANCO) {
+        alert("Exclusao direta no Google Sheets ainda nao esta habilitada. Edite ou remova o item pela planilha.");
+        return;
+      }
+
       if (confirm("Tem certeza que deseja excluir este registro? Esta ação remove o item do estoque local.")) {
         excluirItemEstoque(codigo);
         render();
@@ -1335,9 +1504,9 @@ function configurarOperacao() {
     if (statusBtn) {
       const codigo = statusBtn.dataset.codigo;
       const status = statusBtn.dataset.statusRapido;
-      alterarStatusRapido(codigo, status);
+      await alterarStatusRapido(codigo, status);
       const atualizado = buscarItemPorCodigo(codigo);
-      resultado.innerHTML = renderOperacaoItem(atualizado);
+      if (atualizado) resultado.innerHTML = renderOperacaoItem(atualizado);
     }
 
     const etiquetaBtn = event.target.closest("[data-imprimir-codigo], [data-imprimir-operacao]");
@@ -1375,7 +1544,7 @@ function configurarOperacao() {
   setTimeout(() => campo.focus(), 300);
 }
 
-function alterarStatusRapido(codigo, status) {
+async function alterarStatusRapido(codigo, status) {
   const item = buscarItemPorCodigo(codigo);
   if (!item) return;
 
@@ -1387,10 +1556,36 @@ function alterarStatusRapido(codigo, status) {
     descricao: `Status alterado para: ${status}`
   });
 
-  atualizarItemEstoque(codigo, {
+  const itemAtualizado = normalizarItem({
+    ...item,
     status,
     historico,
     dataAtualizacao: hojeISO()
+  });
+
+  if (USAR_GOOGLE_SHEETS_COMO_BANCO) {
+    try {
+      mostrarStatusSistema("Atualizando status no Google Sheets...", "info");
+      const resposta = await atualizarItemNoGoogleSheets(itemAtualizado);
+
+      if (!resposta || resposta.ok === false) {
+        throw new Error(resposta?.erro || "Atualizacao de status sem confirmacao.");
+      }
+
+      await atualizarEstoqueDoGoogleSheets({ renderizar: false });
+      mostrarStatusSistema("Status atualizado no Google Sheets.", "sucesso");
+    } catch (erro) {
+      console.error("Erro ao atualizar status no Google Sheets:", erro);
+      mostrarStatusSistema("Nao foi possivel atualizar o status no Google Sheets.", "erro");
+      alert("Nao foi possivel atualizar o status no Google Sheets. Veja o console.");
+    }
+    return;
+  }
+
+  atualizarItemEstoque(codigo, {
+    status: itemAtualizado.status,
+    historico: itemAtualizado.historico,
+    dataAtualizacao: itemAtualizado.dataAtualizacao
   });
 }
 
@@ -2810,7 +3005,18 @@ function configurarBotoesGlobais() {
   $("#configurarImpressora")?.addEventListener("click", configurarImpressoraTermica);
   $("#configurarImpressoraTermica")?.addEventListener("click", configurarImpressoraTermica);
 
-  $("#carregarDaPlanilha")?.addEventListener("click", substituirEstoqueLocalPorPlanilha);
+  $("#carregarDaPlanilha")?.addEventListener("click", async () => {
+    await atualizarEstoqueDoGoogleSheets({ renderizar: true });
+  });
+
+  $("#recarregarGoogleSheets")?.addEventListener("click", async () => {
+    await atualizarEstoqueDoGoogleSheets({ renderizar: true });
+  });
+
+  $("#exportarBackupPlanilha")?.addEventListener("click", async () => {
+    await atualizarEstoqueDoGoogleSheets({ renderizar: true });
+    exportarJSON();
+  });
 
   $("#testeImpressaoSimples")?.addEventListener("click", testeImpressaoSimples);
   $("#testeCodigoBarras")?.addEventListener("click", testarEtiquetaCodigo);
@@ -2861,9 +3067,28 @@ function configurarBotoesGlobais() {
    INICIALIZAÇÃO
    ========================================================== */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   configurarTipoPorUrl();
   configurarFormularioCadastro();
+
+  if (USAR_GOOGLE_SHEETS_COMO_BANCO) {
+    const usaEstoqueOnline =
+      $("#tabelaBody") ||
+      $("#listaEstoque") ||
+      $("#produtos") ||
+      $("#listaProdutos") ||
+      $("#estoqueLista") ||
+      $("#resultadoOperacao") ||
+      $("#formRegistro") ||
+      $("#formCadastro") ||
+      $("#formProduto") ||
+      $("form[data-form='registro']");
+
+    if (usaEstoqueOnline) {
+      await atualizarEstoqueDoGoogleSheets({ renderizar: false });
+    }
+  }
+
   configurarDashboard();
   configurarOperacao();
   configurarBotoesGlobais();
@@ -2878,15 +3103,19 @@ document.addEventListener("DOMContentLoaded", () => {
 window.lucimarEstoque = {
   carregarEstoque,
   salvarEstoque,
+  definirEstoqueOnline,
   buscarItemPorCodigo,
   buscarItemPorCodigoLeitura,
   atribuirCodigoLeitura,
   enviarItemParaGoogleSheets,
   sincronizarItensComGoogleSheets,
   carregarItensDoGoogleSheets,
+  atualizarEstoqueDoGoogleSheets,
+  atualizarItemNoGoogleSheets,
   substituirEstoqueLocalPorPlanilha,
   marcarItemSincronizado,
   mostrarFeedbackCadastro,
+  mostrarStatusSistema,
   normalizarCodigoBusca,
   normalizarPrecoVenda,
   formatarMoedaBR,
