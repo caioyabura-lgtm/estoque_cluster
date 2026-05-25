@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>LUCIMAR · Confecção - Sistema Completo</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --fundo: #f7f3eb;
+      --verde-conf: #5b6e4c;
+      --teal: #4a7a76;
+      --areia: #ddceb2;
+      --cacau: #8b5a3c;
+      --grafite: #1c2623;
+      --vidro: rgba(247, 243, 235, 0.92);
+      --sombra: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
+      --brilho: 0 6px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      background: linear-gradient(135deg, #e8e0d0, #d6ccb8);
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: var(--vidro);
+      backdrop-filter: blur(12px);
+      border-radius: 2.5rem;
+      box-shadow: var(--sombra);
+      overflow: hidden;
+      border: 1px solid rgba(255, 250, 240, 0.6);
+    }
+
+    .hero {
+      background: var(--grafite);
+      padding: 1.6rem 2.2rem;
+      border-bottom: 6px solid var(--areia);
+      color: #fef7e6;
+    }
+
+    .hero h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hero h1:before {
+      content: "🧵";
+      font-size: 2rem;
+    }
+
+    .hero p {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-top: 6px;
+    }
+
+    /* TRÊS BOTÕES PRINCIPAIS ANIMADOS */
+    .botoes-nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.8rem;
+      margin: 2rem 2rem 1.2rem 2rem;
+    }
+
+    .btn-principal {
+      background: linear-gradient(145deg, #6d8560, #4f6043);
+      border: none;
+      padding: 1rem 2rem;
+      min-width: 180px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: white;
+      border-radius: 60px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      box-shadow: 0 8px 0 #2b3823;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-principal span {
+      font-size: 1.4rem;
+    }
+
+    .btn-principal:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 0 #2b3823;
+      background: linear-gradient(145deg, #7c9a6b, #5b7348);
+    }
+
+    .btn-principal:active {
+      transform: translateY(6px);
+      box-shadow: 0 4px 0 #2b3823;
+    }
+
+    .btn-cadastrar {
+      background: linear-gradient(145deg, #3f6b5f, #2e5248);
+      box-shadow: 0 8px 0 #1e3a33;
+    }
+    .btn-estoque {
+      background: linear-gradient(145deg, #7f6b4b, #6a563b);
+      box-shadow: 0 8px 0 #4f3f2c;
+    }
+    .btn-backup {
+      background: linear-gradient(145deg, #8b5a6b, #6f4454);
+      box-shadow: 0 8px 0 #4d2e3b;
+    }
+
+    .conteudo-central {
+      padding: 0 2rem 2rem 2rem;
+    }
+
+    .painel {
+      background: rgba(255, 248, 235, 0.9);
+      backdrop-filter: blur(4px);
+      border-radius: 2rem;
+      padding: 1.8rem;
+      border: 1px solid rgba(255, 245, 215, 0.9);
+      box-shadow: var(--brilho);
+      animation: fadeSlide 0.4s ease-out;
+    }
+
+    @keyframes fadeSlide {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 1.2rem;
+    }
+
+    label {
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #2e3c2b;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 28px;
+      border: 1px solid #ddd0b6;
+      background: #fffef7;
+      font-size: 0.9rem;
+      transition: 0.2s;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #7b9a6e;
+      box-shadow: 0 0 0 3px rgba(91, 110, 76, 0.25);
+    }
+
+    button {
+      border: none;
+      background: #5b6e4c;
+      color: white;
+      border-radius: 40px;
+      padding: 10px 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button:hover {
+      background: #4a5c3d;
+      transform: scale(0.97);
+    }
+
+    .btn-sec {
+      background: #8b5a3c;
+    }
+    .btn-danger {
+      background: #a04e4e;
+    }
+
+    .indicadores-grid {
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.8rem;
+    }
+    .indicador-card {
+      background: #ece3d8;
+      border-radius: 2rem;
+      padding: 0.8rem 1.4rem;
+      flex: 1;
+      text-align: center;
+    }
+    .indicador-card strong {
+      font-size: 1.8rem;
+      display: block;
+    }
+
+    .produtos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.4rem;
+      margin-top: 1rem;
+    }
+
+    .produto-item {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 1rem;
+      box-shadow: 0 5px 12px rgba(0,0,0,0.05);
+      border-left: 6px solid var(--teal);
+      transition: 0.2s;
+    }
+
+    .preco-grande {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #3b6b58;
+      margin: 8px 0;
+    }
+
+    .codigo-badge {
+      font-family: monospace;
+      background: #f2e8dc;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .etiqueta-preview {
+      background: #2d3e2a;
+      color: #f7e9c3;
+      padding: 1rem;
+      border-radius: 28px;
+      text-align: center;
+      margin-top: 1rem;
+      font-family: monospace;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.7rem;
+      padding: 1rem;
+      opacity: 0.7;
+      border-top: 1px solid rgba(0,0,0,0.05);
+    }
+
+    @media (max-width: 680px) {
+      .botoes-nav {
+        gap: 1rem;
+      }
+      .btn-principal {
+        padding: 0.7rem 1.2rem;
+        min-width: 130px;
+        font-size: 1rem;
+      }
+      body {
+        padding: 0.8rem;
+      }
+    }
+
+    @media print {
+      .botoes-nav, .hero, footer, .btn-sec, button:not(.print-only) {
+        display: none;
+      }
+      .container {
+        background: white;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="hero">
+    <h1>LUCIMAR · Confecção</h1>
+    <p>Sistema completo de gestão · estoque · etiquetas · backup local</p>
+  </div>
+
+  <!-- TRÊS BOTÕES ANIMADOS -->
+  <div class="botoes-nav">
+    <button class="btn-principal btn-cadastrar" data-tela="cadastro">
+      <span>📦</span> CADASTRAR
+    </button>
+    <button class="btn-principal btn-estoque" data-tela="estoque">
+      <span>📊</span> ESTOQUE
+    </button>
+    <button class="btn-principal btn-backup" data-tela="backup">
+      <span>💾</span> BACKUP
+    </button>
+  </div>
+
+  <div class="conteudo-central" id="appConteudo">
+    <!-- Área dinâmica -->
+    <div id="painelDinamico" class="painel">
+      <div style="text-align: center; padding: 1rem;">
+        <span style="font-size: 3rem;">🧵✨</span>
+        <h2 style="margin: 12px 0;">Operação de confecção</h2>
+        <p>Organize produtos, acompanhe estoque e mantenha seus dados seguros.</p>
+        <button id="botaoDemo" style="margin-top: 20px; background: #7b9a6e;">➕ Cadastrar primeiro produto</button>
+      </div>
+    </div>
+  </div>
+  <footer>
+    🧷 Dados salvos localmente no navegador · Exporte JSON periodicamente
+  </footer>
+</div>
+
+<script>
+  // ======================== BANCO DE DADOS LOCAL ========================
+  let produtos = [];
+
+  function carregarStorage() {
+    const dados = localStorage.getItem("lucimar_confeccao_online");
+    if(dados) {
+      try {
+        produtos = JSON.parse(dados);
+      } catch(e) { produtos = []; }
+    }
+    if(!produtos || produtos.length === 0) {
+      produtos = [
+        { codigo: "EST_1001", nome: "Bolsa Cora", preco: 89.90, categoria: "Bolsa", status: "Em estoque", descricao: "Tecido canvas natural, alça longa e interna estampada.", dataEntrada: new Date().toLocaleDateString(), fotoBase64: "" },
+        { codigo: "EST_1002", nome: "Almofada Linho", preco: 49.90, categoria: "Casa", status: "Em estoque", descricao: "Fronha 40x40, algodão cru com barra de renda.", dataEntrada: new Date().toLocaleDateString(), fotoBase64: "" },
+        { codigo: "EST_1003", nome: "Vestido Flora", preco: 129.90, categoria: "Vestido", status: "Em produção", descricao: "Tecido floral, alças reguláveis, tecido ecológico.", dataEntrada: new Date().toLocaleDateString(), fotoBase64: "" }
+      ];
+      salvarStorage();
+    }
+  }
+
+  function salvarStorage() {
+    localStorage.setItem("lucimar_confeccao_online", JSON.stringify(produtos));
+  }
+
+  function gerarCodigo() {
+    let maior = 0;
+    produtos.forEach(p => {
+      let num = parseInt(p.codigo.split("_")[1]);
+      if(!isNaN(num) && num > maior) maior = num;
+    });
+    let novoNum = maior + 1;
+    return `EST_${novoNum.toString().padStart(4, '0')}`;
+  }
+
+  function formatarPreco(valor) {
+    return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+  }
+
+  // ======================== RENDERIZAÇÃO DAS TELAS ========================
+  let telaAtiva = "welcome";
+
+  function renderizarCadastro() {
+    return `
+      <div class="painel">
+        <h2>📋 Cadastrar novo produto</h2>
+        <form id="formCadastroProduto">
+          <div class="form-grid">
+            <div><label>Nome do produto *</label><input type="text" id="campoNome" placeholder="Ex: Bolsa Couro" required></div>
+            <div><label>Preço (R$) *</label><input type="number" step="0.01" id="campoPreco" placeholder="89,90" required></div>
+            <div><label>Categoria</label><input type="text" id="campoCategoria" placeholder="Bolsa / Vestido / Acessório"></div>
+            <div><label>Status</label><select id="campoStatus"><option>Em estoque</option><option>Reservado</option><option>Vendido</option><option>Em produção</option><option>Teste</option></select></div>
+          </div>
+          <div><label>Descrição completa</label><textarea id="campoDescricao" rows="2" placeholder="Material, medidas, acabamentos, observações..."></textarea></div>
+          <div class="form-grid">
+            <div><label>Foto do produto (opcional)</label><input type="file" id="campoFoto" accept="image/*"></div>
+          </div>
+          <div style="display: flex; gap: 12px; margin-top: 18px;">
+            <button type="submit">💾 Salvar produto</button>
+            <button type="button" id="cancelarCadastro" class="btn-sec">Cancelar</button>
+          </div>
+          <div id="msgCadastroFeedback" style="margin-top: 12px; font-size: 0.85rem; color: #2c6e4f;"></div>
+        </form>
+      </div>
+    `;
+  }
+
+  function renderizarEstoque() {
+    const total = produtos.length;
+    const valorEstoque = produtos.reduce((acc, p) => p.status !== "Vendido" ? acc + p.preco : acc, 0);
+    const vendidos = produtos.filter(p => p.status === "Vendido").length;
+    const producao = produtos.filter(p => p.status === "Em produção").length;
+
+    return `
+      <div class="painel">
+        <div class="indicadores-grid">
+          <div class="indicador-card"><span>📦 Total produtos</span><strong>${total}</strong></div>
+          <div class="indicador-card"><span>💰 Valor em estoque</span><strong>${formatarPreco(valorEstoque)}</strong></div>
+          <div class="indicador-card"><span>✅ Vendidos</span><strong>${vendidos}</strong></div>
+          <div class="indicador-card"><span>⚙️ Em produção</span><strong>${producao}</strong></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; margin-bottom: 1rem;">
+          <h3>🗂️ Lista de produtos</h3>
+          <button id="atualizarEstoqueBtn" style="background:#6f5e48;">🔄 Atualizar</button>
+        </div>
+        <div id="listaProdutos" class="produtos-grid">
+          ${produtos.map(prod => `
+            <div class="produto-item" data-codigo="${prod.codigo}">
+              <div style="display: flex; justify-content: space-between;">
+                <strong>${prod.nome}</strong>
+                <span class="codigo-badge">${prod.codigo}</span>
+              </div>
+              <div class="preco-grande">${formatarPreco(prod.preco)}</div>
+              <div>📌 ${prod.categoria || 'Geral'} • 🏷️ ${prod.status}</div>
+              <div style="font-size:0.75rem; margin: 8px 0;">${prod.descricao?.substring(0, 80) || 'Sem descrição'}</div>
+              <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button class="editarProdutoBtn" data-codigo="${prod.codigo}" style="background:#7e6c4e; padding:6px 12px;">✏️ Editar</button>
+                <button class="etiquetaBtn" data-codigo="${prod.codigo}" style="background:#4a7a76;">🏷️ Etiqueta</button>
+              </div>
+            </div>
+          `).join('') || '<div style="padding: 20px; text-align:center;">Nenhum produto cadastrado. Clique em CADASTRAR.</div>'}
+        </div>
+        <p style="margin-top: 1rem; font-size:0.7rem;">* Clique em Editar para modificar dados, Etiqueta para gerar código de operação.</p>
+      </div>
+    `;
+  }
+
+  function renderizarBackup() {
+    return `
+      <div class="painel">
+        <h2>💾 Backup e segurança dos dados</h2>
+        <p style="margin-bottom: 20px;">Exporte todos os produtos ou importe um arquivo JSON salvo anteriormente.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 16px;">
+          <button id="exportarJsonBtn">📥 Exportar JSON completo</button>
+          <label for="importarArquivoJson" style="background:#8b5a3c; border-radius:40px; padding:10px 20px; color:white; cursor:pointer; display:inline-flex; gap:8px;">📂 Importar JSON</label>
+          <input type="file" id="importarArquivoJson" accept="application/json" hidden>
+          <button id="gerarEtiquetaGlobal" class="btn-sec">🧾 Simular impressão (PIX/Etiqueta)</button>
+        </div>
+        <div id="areaBackupMsg" style="margin-top: 24px;"></div>
+        <div id="demoImpressao" class="etiqueta-preview" style="display: none;"></div>
+        <p class="mensagem-obs" style="margin-top: 24px;">✅ Dica: Sempre exporte antes de grandes alterações. Os dados ficam salvos apenas neste navegador.</p>
+      </div>
+    `;
+  }
+
+  function exibirEtiquetaProduto(codigo) {
+    const produto = produtos.find(p => p.codigo === codigo);
+    if(!produto) return alert("Produto não encontrado");
+    const etiquetaHtml = `
+      <div style="background:#2d3e2a; color:#f7e9c3; padding:1rem; border-radius:20px; margin-top: 12px; text-align:center;">
+        <strong>🧾 ETIQUETA OPERACIONAL</strong><br>
+        Código: ${produto.codigo}<br>
+        Produto: ${produto.nome}<br>
+        Valor: ${formatarPreco(produto.preco)}<br>
+        Status: ${produto.status}<br>
+        Data emissão: ${new Date().toLocaleString()}<br>
+        <small style="display:block; margin-top:8px;">🔖 Confecção Lucimar - via sistema</small>
+      </div>
+    `;
+    const janela = window.open();
+    janela.document.write(`
+      <html><head><title>Etiqueta - ${produto.nome}</title>
+      <style>body{font-family:monospace; padding:20px; background:#f2efe7;}</style>
+      </head><body>${etiquetaHtml}<br><button onclick="window.print();">🖨️ Imprimir</button></body></html>
+    `);
+    janela.document.close();
+  }
+
+  function editarProdutoInterativo(codigo) {
+    const produto = produtos.find(p => p.codigo === codigo);
+    if(!produto) return;
+    const novoNome = prompt("✏️ Editar nome:", produto.nome);
+    if(novoNome && novoNome.trim()) produto.nome = novoNome.trim();
+    const novoPreco = prompt("💰 Novo preço (R$):", produto.preco);
+    if(novoPreco !== null && !isNaN(parseFloat(novoPreco))) produto.preco = parseFloat(novoPreco);
+    const novoStatus = prompt("📌 Status (Em estoque / Reservado / Vendido / Em produção):", produto.status);
+    if(novoStatus && novoStatus.trim()) produto.status = novoStatus.trim();
+    const novaDesc = prompt("📝 Descrição:", produto.descricao);
+    if(novaDesc !== null) produto.descricao = novaDesc;
+    salvarStorage();
+    carregarTela("estoque");
+  }
+
+  function carregarTela(tela) {
+    const container = document.getElementById("painelDinamico");
+    if(!container) return;
+    let html = "";
+    if(tela === "cadastro") {
+      html = renderizarCadastro();
+      telaAtiva = "cadastro";
+    } else if(tela === "estoque") {
+      html = renderizarEstoque();
+      telaAtiva = "estoque";
+    } else if(tela === "backup") {
+      html = renderizarBackup();
+      telaAtiva = "backup";
+    } else {
+      html = `<div class="painel" style="text-align:center;"><span style="font-size:3rem;">🧵✨</span><h2>Bem-vinda, Lucimar!</h2><p>Gerencie sua confecção com facilidade.</p><button id="botaoInicialCadastro" style="background:#6e8f5e;">➕ Novo produto</button></div>`;
+      telaAtiva = "welcome";
+    }
+    container.innerHTML = html;
+
+    // eventos específicos
+    if(tela === "cadastro") {
+      const form = document.getElementById("formCadastroProduto");
+      if(form) {
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const nome = document.getElementById("campoNome").value.trim();
+          const preco = parseFloat(document.getElementById("campoPreco").value);
+          const categoria = document.getElementById("campoCategoria").value;
+          const status = document.getElementById("campoStatus").value;
+          const descricao = document.getElementById("campoDescricao").value;
+          if(!nome || isNaN(preco)) {
+            document.getElementById("msgCadastroFeedback").innerText = "Preencha nome e preço válido.";
+            return;
+          }
+          const codigo = gerarCodigo();
+          const dataEntrada = new Date().toLocaleDateString();
+          const fileFoto = document.getElementById("campoFoto").files[0];
+          if(fileFoto) {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+              const novoProduto = { codigo, nome, preco, categoria: categoria || "Geral", status, descricao, dataEntrada, fotoBase64: ev.target.result };
+              produtos.push(novoProduto);
+              salvarStorage();
+              document.getElementById("msgCadastroFeedback").innerHTML = `✅ ${nome} cadastrado! Código ${codigo}`;
+              form.reset();
+              setTimeout(() => carregarTela("estoque"), 1000);
+            };
+            reader.readAsDataURL(fileFoto);
+          } else {
+            const novoProduto = { codigo, nome, preco, categoria: categoria || "Geral", status, descricao, dataEntrada, fotoBase64: "" };
+            produtos.push(novoProduto);
+            salvarStorage();
+            document.getElementById("msgCadastroFeedback").innerHTML = `✅ Produto ${nome} adicionado!`;
+            form.reset();
+            setTimeout(() => carregarTela("estoque"), 800);
+          }
+        });
+      }
+      const cancelar = document.getElementById("cancelarCadastro");
+      if(cancelar) cancelar.onclick = () => carregarTela("welcome");
+    }
+
+    if(tela === "estoque") {
+      document.querySelectorAll(".editarProdutoBtn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const cod = btn.getAttribute("data-codigo");
+          editarProdutoInterativo(cod);
+        });
+      });
+      document.querySelectorAll(".etiquetaBtn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const cod = btn.getAttribute("data-codigo");
+          exibirEtiquetaProduto(cod);
+        });
+      });
+      const atualizar = document.getElementById("atualizarEstoqueBtn");
+      if(atualizar) atualizar.onclick = () => carregarTela("estoque");
+    }
+
+    if(tela === "backup") {
+      const exportar = document.getElementById("exportarJsonBtn");
+      if(exportar) {
+        exportar.onclick = () => {
+          const dataStr = JSON.stringify(produtos, null, 2);
+          const blob = new Blob([dataStr], {type: "application/json"});
+          const a = document.createElement("a");
+          const url = URL.createObjectURL(blob);
+          a.href = url;
+          a.download = `lucimar_backup_${new Date().toISOString().slice(0,19)}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          document.getElementById("areaBackupMsg").innerHTML = "<span style='color:#2d6a4f;'>✅ Backup exportado com sucesso!</span>";
+        };
+      }
+      const importFile = document.getElementById("importarArquivoJson");
+      importFile?.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const dados = JSON.parse(ev.target.result);
+            if(Array.isArray(dados)) {
+              produtos = dados;
+              salvarStorage();
+              document.getElementById("areaBackupMsg").innerHTML = "<span style='color:#2c553c;'>📀 Importação concluída! Recarregando estoque...</span>";
+              setTimeout(() => carregarTela("estoque"), 1000);
+            } else throw new Error();
+          } catch(err) {
+            document.getElementById("areaBackupMsg").innerHTML = "<span style='color:#b33;'>❌ Arquivo inválido.</span>";
+          }
+        };
+        reader.readAsText(file);
+      });
+      const gerarEtiqueta = document.getElementById("gerarEtiquetaGlobal");
+      if(gerarEtiqueta) {
+        gerarEtiqueta.onclick = () => {
+          const demoDiv = document.getElementById("demoImpressao");
+          if(demoDiv) {
+            demoDiv.style.display = "block";
+            demoDiv.innerHTML = `<strong>🧾 ETIQUETA PARA OPERAÇÃO</strong><br>Código Operacional: PIX_${Date.now().toString().slice(-6)}<br>Lucimar Confecção · Simulação<br>Data: ${new Date().toLocaleString()}<br><button id="printEtiquetaDemo" style="margin-top:8px;">🖨️ Imprimir</button>`;
+            const printBtn = demoDiv.querySelector("#printEtiquetaDemo");
+            if(printBtn) printBtn.onclick = () => window.print();
+          }
+        };
+      }
+    }
+
+    if(tela === "welcome") {
+      const btnDemo = document.getElementById("botaoInicialCadastro");
+      if(btnDemo) btnDemo.onclick = () => carregarTela("cadastro");
+    }
+  }
+
+  function navegacao() {
+    const botoesNav = document.querySelectorAll("[data-tela]");
+    botoesNav.forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const telaDestino = btn.getAttribute("data-tela");
+        if(telaDestino === "cadastro") carregarTela("cadastro");
+        else if(telaDestino === "estoque") carregarTela("estoque");
+        else if(telaDestino === "backup") carregarTela("backup");
+      });
+    });
+    const botaoDemoInicial = document.getElementById("botaoDemo");
+    if(botaoDemoInicial) botaoDemoInicial.onclick = () => carregarTela("cadastro");
+  }
+
+  function init() {
+    carregarStorage();
+    navegacao();
+    carregarTela("welcome");
+  }
+  window.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
