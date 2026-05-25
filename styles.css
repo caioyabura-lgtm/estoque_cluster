@@ -506,6 +506,20 @@ th {
   background: #fff;
 }
 
+.campo-foto {
+  display: grid;
+  gap: 10px;
+}
+
+.preview-foto {
+  width: min(280px, 100%);
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.12);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+}
+
 .acoes-form {
   display: flex;
   gap: 12px;

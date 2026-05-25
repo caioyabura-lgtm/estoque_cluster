@@ -17,6 +17,7 @@ let estoqueOnline = [];
 let ultimaSincronizacaoSheets = null;
 let renderizarDashboard = null;
 let estoqueOnlineCarregado = false;
+let fotoCadastroBase64 = "";
 
 /* ==========================================================
    UTILITÁRIOS BÁSICOS
@@ -274,7 +275,9 @@ async function enviarItemParaGoogleSheets(item) {
     method: "POST",
     body: JSON.stringify({
       action: "criar",
-      ...item
+      ...item,
+      foto: item.foto || item.fotoBase64 || "",
+      fotoBase64: item.fotoBase64 || item.foto || ""
     })
   });
 
@@ -320,7 +323,12 @@ async function sincronizarItensComGoogleSheets(itens) {
 
       if (resposta && resposta.ok) {
         marcarItemSincronizado(item.codigo, true);
-        resultados.push({ codigo: item.codigo, ok: true });
+        resultados.push({
+          codigo: item.codigo,
+          ok: true,
+          fotoUrl: resposta.fotoUrl || resposta.item?.fotoUrl || "",
+          resposta
+        });
       } else {
         marcarItemSincronizado(item.codigo, false);
         resultados.push({
@@ -672,6 +680,8 @@ function normalizarItem(item = {}) {
     observacaoEtiqueta: item.observacaoEtiqueta || "",
     observacoesInternas: item.observacoesInternas || "",
     fotoLocal: item.fotoLocal || "",
+    foto: item.foto || item.fotoUrl || "",
+    fotoBase64: item.fotoBase64 || (String(item.foto || item.fotoUrl || "").startsWith("data:image/") ? (item.foto || item.fotoUrl) : ""),
     fotoUrl: item.fotoUrl || item.foto || "",
     pastaFotoSugerida: item.pastaFotoSugerida || pastaFotoPadrao(tipoRegistro, item.codigo),
     dataRegistro: item.dataRegistro || item.dataEntrada || hojeISO(),
@@ -874,6 +884,48 @@ async function arquivoParaBase64(inputFile) {
   });
 }
 
+function limparFotoCadastro() {
+  fotoCadastroBase64 = "";
+
+  const input = document.getElementById("fotoCamera");
+  const preview = document.getElementById("previewFotoCadastro");
+
+  if (input) input.value = "";
+
+  if (preview) {
+    preview.src = "";
+    preview.classList.add("escondido");
+  }
+}
+
+function configurarFotoCadastro() {
+  const input = document.getElementById("fotoCamera");
+  const preview = document.getElementById("previewFotoCadastro");
+  const remover = document.getElementById("removerFotoCadastro");
+
+  if (!input) return;
+
+  input.addEventListener("change", async () => {
+    const arquivo = input.files && input.files[0];
+
+    if (!arquivo) {
+      limparFotoCadastro();
+      return;
+    }
+
+    fotoCadastroBase64 = await arquivoParaBase64(input);
+
+    if (preview) {
+      preview.src = fotoCadastroBase64;
+      preview.classList.remove("escondido");
+    }
+  });
+
+  remover?.addEventListener("click", limparFotoCadastro);
+
+  document.getElementById("limparFormulario")?.addEventListener("click", limparFotoCadastro);
+}
+
 async function dadosDoFormulario(form) {
   const tipoUrl = new URLSearchParams(window.location.search).get("tipo");
 
@@ -887,7 +939,12 @@ async function dadosDoFormulario(form) {
     form.querySelector('input[type="file"][name="foto"]') ||
     form.querySelector('input[type="file"]');
 
-  const fotoUrl = await arquivoParaBase64(inputFoto);
+  const fotoArquivoBase64 = fotoCadastroBase64 || await arquivoParaBase64(inputFoto);
+  const fotoBase64Cadastro = String(fotoArquivoBase64 || "").startsWith("data:image/")
+    ? fotoArquivoBase64
+    : "";
+  const fotoUrlInformada = form.querySelector('input[type="url"][name="foto"], #foto')?.value || "";
+  const fotoUrl = fotoArquivoBase64 || fotoUrlInformada || "";
   const precoVenda = lerValorCampo(form, ["precoVenda", "preco", "preço", "valorVenda", "valor"]);
 
   const dados = {
@@ -918,6 +975,8 @@ async function dadosDoFormulario(form) {
     cuidadoProfissional: lerValorCampo(form, ["cuidadoProfissional"]) || "Não lavar a seco",
     observacaoEtiqueta: lerValorCampo(form, ["observacaoEtiqueta", "observaçãoEtiqueta"]),
     observacoesInternas: lerValorCampo(form, ["observacoesInternas", "observaçõesInternas"]),
+    foto: fotoBase64Cadastro,
+    fotoBase64: fotoBase64Cadastro,
     fotoUrl
   };
 
@@ -996,11 +1055,17 @@ function configurarFormularioCadastro() {
             "aviso"
           );
         } else {
+          const fotosSalvas = resultados.filter(r => r.fotoUrl).length;
+          const complementoFoto = fotosSalvas
+            ? `<br>${fotosSalvas} foto(s) salva(s) no Google Drive.`
+            : "";
+
           mostrarFeedbackCadastro(
-            `${itens.length} item(ns) cadastrados no Google Sheets.<br>${listaCodigos}`,
+            `${itens.length} item(ns) cadastrados no Google Sheets.<br>${listaCodigos}${complementoFoto}`,
             "sucesso"
           );
           form.reset();
+          limparFotoCadastro();
           configurarTipoPorUrl();
 
           try {
@@ -1022,6 +1087,7 @@ function configurarFormularioCadastro() {
       );
 
       form.reset();
+      limparFotoCadastro();
       configurarTipoPorUrl();
 
       try {
@@ -3069,6 +3135,7 @@ function configurarBotoesGlobais() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   configurarTipoPorUrl();
+  configurarFotoCadastro();
   configurarFormularioCadastro();
 
   if (USAR_GOOGLE_SHEETS_COMO_BANCO) {

@@ -108,6 +108,28 @@
             <label for="foto">Foto (URL)</label>
             <input id="foto" name="foto" type="url" placeholder="https://...">
           </div>
+
+          <section class="campo-foto">
+            <label for="fotoCamera">Foto do item</label>
+
+            <input
+              type="file"
+              id="fotoCamera"
+              name="foto"
+              accept="image/*"
+              capture="environment"
+            >
+
+            <img
+              id="previewFotoCadastro"
+              class="preview-foto escondido"
+              alt="Pré-visualização da foto"
+            >
+
+            <button type="button" id="removerFotoCadastro" class="button button-secondary">
+              Remover foto
+            </button>
+          </section>
         </div>
 
         <div class="field-block">
