@@ -2,8 +2,9 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>LUCIMAR · Hub Central da Confecção</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>LUCIMAR · Estoque de Confecção</title>
 
   <style>
     * {
@@ -13,460 +14,445 @@
     }
 
     :root {
-      --verde-confeccao: #5b6e4c;
-      --verde-escuro: #3d5232;
-      --teal-suave: #4a7a76;
+      --fundo: #f7f1e6;
+      --papel: rgba(255, 252, 245, 0.88);
+      --papel-forte: #fffaf0;
+      --grafite: #252722;
+      --marrom: #6f4d37;
+      --terracota: #aa6838;
       --areia: #e2d4b9;
-      --cacau: #8b5a3c;
-      --cacau-claro: #a8754f;
-      --grafite: #1c2623;
-      --fundo-claro: #faf7f0;
-      --sombra: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
-      --brilho: 0 8px 20px rgba(0, 0, 0, 0.1);
+      --linha: rgba(111, 77, 55, 0.18);
+      --sombra: 0 26px 70px rgba(37, 39, 34, 0.16);
+      --sombra-suave: 0 10px 28px rgba(37, 39, 34, 0.10);
+      --branco: #fffdf8;
+      --oliva: #5f6f50;
+      --teal: #426f6a;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--fundo);
     }
 
     body {
-      font-family: 'Segoe UI', 'Roboto', 'Poppins', system-ui, sans-serif;
-      background: radial-gradient(circle at 10% 20%, #ece3d5, #dbcfb8);
       min-height: 100vh;
-      padding: 2rem;
-      position: relative;
+      font-family: "Segoe UI", Roboto, Arial, system-ui, sans-serif;
+      color: var(--grafite);
+      background:
+        radial-gradient(circle at 12% 18%, rgba(170, 104, 56, 0.16), transparent 28%),
+        radial-gradient(circle at 90% 12%, rgba(66, 111, 106, 0.16), transparent 30%),
+        radial-gradient(circle at 70% 88%, rgba(95, 111, 80, 0.14), transparent 32%),
+        linear-gradient(135deg, #fbf6ec 0%, #eadfc9 100%);
+      overflow-x: hidden;
     }
 
-    /* partículas decorativas sutis */
     body::before {
-      content: "🧵";
-      font-size: 18vw;
+      content: "";
       position: fixed;
-      bottom: 0;
-      right: 0;
-      opacity: 0.04;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.22;
+      background-image:
+        linear-gradient(90deg, rgba(111, 77, 55, 0.08) 1px, transparent 1px),
+        linear-gradient(rgba(111, 77, 55, 0.08) 1px, transparent 1px);
+      background-size: 22px 22px;
+      mask-image: radial-gradient(circle at center, black, transparent 78%);
+      z-index: 0;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: -20%;
+      pointer-events: none;
+      opacity: 0.10;
+      background:
+        repeating-linear-gradient(
+          45deg,
+          transparent 0 18px,
+          rgba(111, 77, 55, 0.35) 19px,
+          transparent 20px 42px
+        );
+      animation: tramaLenta 42s linear infinite;
+      z-index: 0;
+    }
+
+    .pagina {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 32px 18px;
+    }
+
+    .cartao {
+      width: min(980px, 100%);
+      position: relative;
+      overflow: hidden;
+      border-radius: 36px;
+      background:
+        linear-gradient(135deg, rgba(255, 253, 248, 0.96), rgba(248, 240, 226, 0.92));
+      border: 1px solid rgba(111, 77, 55, 0.14);
+      box-shadow: var(--sombra);
+      padding: clamp(28px, 5vw, 58px);
+      text-align: center;
+    }
+
+    .cartao::before {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border: 1px dashed rgba(111, 77, 55, 0.18);
+      border-radius: 28px;
+      pointer-events: none;
+    }
+
+    .cartao::after {
+      content: "CORA  CORA  CORA  CORA";
+      position: absolute;
+      left: -44px;
+      bottom: 30px;
+      color: rgba(111, 77, 55, 0.055);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(54px, 9vw, 112px);
+      letter-spacing: 0.22em;
+      white-space: nowrap;
+      transform: rotate(-8deg);
+      pointer-events: none;
+    }
+
+    .marca {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      justify-items: center;
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .logo {
+      width: min(700px, 96%);
+      max-height: 280px;
+      object-fit: contain;
+      filter: drop-shadow(0 18px 28px rgba(37, 39, 34, 0.14));
+    }
+
+    .logo-fallback {
+      display: none;
+      width: 132px;
+      height: 132px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--grafite);
+      color: var(--papel-forte);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 72px;
+      box-shadow: var(--sombra-suave);
+    }
+
+    .selo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(170, 104, 56, 0.10);
+      border: 1px solid rgba(170, 104, 56, 0.18);
+      color: var(--marrom);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+    }
+
+    .selo::before,
+    .selo::after {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--terracota);
+      opacity: 0.7;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 0 auto;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 500;
+      font-size: clamp(34px, 6vw, 68px);
+      line-height: 0.98;
+      letter-spacing: -0.03em;
+      color: var(--grafite);
+    }
+
+    .subtitulo {
+      position: relative;
+      z-index: 1;
+      max-width: 670px;
+      margin: 20px auto 0;
+      color: rgba(37, 39, 34, 0.72);
+      font-size: clamp(16px, 2.2vw, 20px);
+      line-height: 1.55;
+    }
+
+    .frase {
+      position: relative;
+      z-index: 1;
+      max-width: 620px;
+      margin: 18px auto 0;
+      color: rgba(111, 77, 55, 0.82);
+      font-size: 14px;
+      line-height: 1.5;
+      font-style: italic;
+    }
+
+    .entradas {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin: 38px auto 0;
+      max-width: 790px;
+    }
+
+    .botao {
+      min-height: 86px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      padding: 18px 16px;
+      border-radius: 22px;
+      text-decoration: none;
+      color: var(--branco);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      box-shadow: var(--sombra-suave);
+      transition:
+        transform 0.22s ease,
+        box-shadow 0.22s ease,
+        filter 0.22s ease;
+    }
+
+    .botao strong {
+      font-size: 18px;
+      letter-spacing: 0.01em;
+    }
+
+    .botao span {
+      font-size: 12px;
+      line-height: 1.28;
+      opacity: 0.84;
+    }
+
+    .botao:hover,
+    .botao:focus-visible {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 38px rgba(37, 39, 34, 0.22);
+      filter: saturate(1.06);
+      outline: none;
+    }
+
+    .botao:focus-visible {
+      box-shadow:
+        0 18px 38px rgba(37, 39, 34, 0.22),
+        0 0 0 4px rgba(170, 104, 56, 0.22);
+    }
+
+    .registro {
+      background: linear-gradient(135deg, var(--terracota), #7d4a2d);
+    }
+
+    .estoque {
+      background: linear-gradient(135deg, var(--oliva), #43583b);
+    }
+
+    .operacao {
+      background: linear-gradient(135deg, var(--teal), #2f5652);
+    }
+
+    .rodape {
+      position: relative;
+      z-index: 1;
+      margin-top: 34px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(111, 77, 55, 0.14);
+      color: rgba(37, 39, 34, 0.56);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .rodape strong {
+      color: var(--marrom);
+      font-weight: 800;
+    }
+
+    .detalhes {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
       pointer-events: none;
       z-index: 0;
     }
 
-    .hub-container {
-      max-width: 1300px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 2;
+    .linha {
+      position: absolute;
+      width: 340px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(111, 77, 55, 0.20), transparent);
+      transform: rotate(-18deg);
     }
 
-    /* HEADER PRINCIPAL */
-    .hero-lucimar {
-      background: var(--grafite);
-      border-radius: 2rem 2rem 2rem 2rem;
-      padding: 2rem 2.2rem;
-      margin-bottom: 2rem;
-      box-shadow: var(--brilho);
-      border-bottom: 6px solid var(--areia);
-      transition: all 0.3s;
+    .linha.um {
+      top: 90px;
+      left: -90px;
     }
 
-    .hero-lucimar h1 {
-      font-size: 2.2rem;
-      color: #fef3e0;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
+    .linha.dois {
+      right: -100px;
+      bottom: 110px;
+      transform: rotate(16deg);
     }
 
-    .hero-lucimar h1 span {
-      background: var(--cacau);
-      padding: 0.2rem 0.8rem;
-      border-radius: 60px;
-      font-size: 1rem;
-      letter-spacing: 1px;
+    .ponto {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(170, 104, 56, 0.32);
     }
 
-    .hero-lucimar p {
-      color: #ddceb2;
-      margin-top: 12px;
-      font-size: 1rem;
+    .ponto.um {
+      top: 72px;
+      right: 120px;
     }
 
-    /* GRADE DE MÓDULOS / SISTEMA */
-    .modulos-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-      margin: 2.5rem 0;
+    .ponto.dois {
+      bottom: 86px;
+      left: 118px;
     }
 
-    .modulo-card {
-      background: rgba(255, 252, 240, 0.92);
-      backdrop-filter: blur(4px);
-      border-radius: 2rem;
-      padding: 2rem 1.5rem;
-      transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.2);
-      cursor: pointer;
-      text-decoration: none;
-      color: var(--grafite);
-      display: block;
-      border: 1px solid rgba(139, 90, 60, 0.2);
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
-      text-align: center;
-    }
-
-    .modulo-card:hover {
-      transform: translateY(-10px);
-      background: white;
-      box-shadow: var(--sombra);
-      border-color: var(--cacau-claro);
-    }
-
-    .modulo-icone {
-      font-size: 3.5rem;
-      margin-bottom: 1rem;
-      display: inline-block;
-      filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.1));
-    }
-
-    .modulo-card h3 {
-      font-size: 1.7rem;
-      color: var(--verde-escuro);
-      margin-bottom: 0.8rem;
-    }
-
-    .modulo-card p {
-      color: #4b5a44;
-      font-size: 0.9rem;
-      line-height: 1.4;
-    }
-
-    .badge-acesso {
-      margin-top: 1.2rem;
-      display: inline-block;
-      background: var(--teal-suave);
-      color: white;
-      padding: 0.3rem 1rem;
-      border-radius: 30px;
-      font-size: 0.7rem;
-      font-weight: bold;
-    }
-
-    /* BARRA DE STATUS E INFO */
-    .info-sistema {
-      background: var(--areia);
-      border-radius: 1.5rem;
-      padding: 1.2rem 1.8rem;
-      margin: 2rem 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      box-shadow: inset 0 0 0 1px rgba(255,255,200,0.6), 0 4px 12px rgba(0,0,0,0.05);
-    }
-
-    .estatistica-hub {
-      display: flex;
-      gap: 2rem;
-      flex-wrap: wrap;
-    }
-
-    .estatistica-item {
-      background: #fff6e8;
-      padding: 0.4rem 1.2rem;
-      border-radius: 60px;
-      font-weight: bold;
-    }
-
-    .estatistica-item span:first-child {
-      color: var(--cacau);
-    }
-
-    .btn-acao-rapida {
-      background: var(--verde-confeccao);
-      color: white;
-      border: none;
-      padding: 0.6rem 1.4rem;
-      border-radius: 40px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-acao-rapida:hover {
-      background: var(--verde-escuro);
-      transform: scale(0.97);
-    }
-
-    /* rodapé */
-    .footer-hub {
-      text-align: center;
-      margin-top: 3rem;
-      padding: 1rem;
-      font-size: 0.75rem;
-      color: #5a5b4e;
-      border-top: 1px solid rgba(92, 78, 55, 0.2);
-    }
-
-    /* notificações */
-    .toast-message {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--grafite);
-      color: #f3e9d2;
-      padding: 0.8rem 1.8rem;
-      border-radius: 60px;
-      font-weight: bold;
-      z-index: 1000;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-      animation: fadeUp 0.3s ease;
-    }
-
-    @keyframes fadeUp {
+    @keyframes tramaLenta {
       from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(20px);
+        transform: translate3d(0, 0, 0);
       }
+
       to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translate3d(72px, -72px, 0);
       }
     }
 
-    @media (max-width: 680px) {
-      body {
-        padding: 1rem;
+    @media (max-width: 760px) {
+      .pagina {
+        padding: 18px 14px;
+        align-items: start;
       }
-      .hero-lucimar h1 {
-        font-size: 1.5rem;
+
+      .cartao {
+        border-radius: 28px;
+        padding: 30px 20px;
       }
-      .modulos-grid {
-        gap: 1rem;
+
+      .cartao::before {
+        inset: 10px;
+        border-radius: 22px;
       }
-      .modulo-card h3 {
-        font-size: 1.3rem;
+
+      .logo {
+        width: min(440px, 98%);
+        max-height: 190px;
+      }
+
+      .entradas {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 28px;
+      }
+
+      .botao {
+        min-height: 74px;
+      }
+
+      h1 {
+        font-size: clamp(32px, 12vw, 52px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body::after,
+      .botao {
+        animation: none;
+        transition: none;
       }
     }
   </style>
 </head>
+
 <body>
+  <main class="pagina">
+    <section class="cartao" aria-label="Entrada do sistema de estoque LUCIMAR">
+      <div class="detalhes" aria-hidden="true">
+        <div class="linha um"></div>
+        <div class="linha dois"></div>
+        <div class="ponto um"></div>
+        <div class="ponto dois"></div>
+      </div>
 
-<div class="hub-container">
-  <!-- CABEÇALHO ANFITRIÃO -->
-  <div class="hero-lucimar">
-    <h1>
-      🧵 LUCIMAR · SISTEMA DE CONFECÇÃO
-      <span>Hub Central</span>
-    </h1>
-    <p>Plataforma integrada para gestão de estoque, cadastro de produtos, backup, etiquetas e operações produtivas.</p>
-  </div>
+      <div class="marca">
+        <img
+          src="./logo_lucimar.png"
+          class="logo"
+          alt="Logomarca LUCIMAR MARIA RODRIGUES"
+          onerror="this.style.display='none'; document.querySelector('.logo-fallback').style.display='flex';"
+        />
 
-  <!-- MÓDULOS PRINCIPAIS (CARDS) - cada um linkando para página específica -->
-  <div class="modulos-grid">
-    <!-- DASHBOARD / ESTOQUE -->
-    <a href="dashboard.html" class="modulo-card" data-modulo="dashboard">
-      <div class="modulo-icone">📊📈</div>
-      <h3>Dashboard & Estoque</h3>
-      <p>Visão geral do catálogo, indicadores de valor total, produtos vendidos, em produção e filtros inteligentes.</p>
-      <div class="badge-acesso">ACESSAR MÓDULO →</div>
-    </a>
+        <div class="logo-fallback" aria-hidden="true">L</div>
 
-    <!-- CADASTRO DE PRODUTOS -->
-    <a href="cadastro.html" class="modulo-card" data-modulo="cadastro">
-      <div class="modulo-icone">🏷️📦</div>
-      <h3>Cadastro de Produtos</h3>
-      <p>Adicione novos itens com nome, preço, categoria, status, descrição e foto. Código automático ou manual.</p>
-      <div class="badge-acesso">NOVO PRODUTO →</div>
-    </a>
+        <div class="selo">LUCIMAR MARIA RODRIGUES</div>
+      </div>
 
-    <!-- BACKUP + SEGURANÇA -->
-    <a href="backup.html" class="modulo-card" data-modulo="backup">
-      <div class="modulo-icone">💾🔐</div>
-      <h3>Backup & Segurança</h3>
-      <p>Exporte todos os dados em JSON, importe backups anteriores, simule etiquetas e mantenha sua operação segura.</p>
-      <div class="badge-acesso">GERENCIAR BACKUP →</div>
-    </a>
-  </div>
+      <h1>Estoque de Confecção</h1>
 
-  <!-- SEGUNDA LINHA: MÓDULOS COMPLEMENTARES -->
-  <div class="modulos-grid" style="margin-top: -0.5rem;">
-    <!-- ETIQUETAS E IMPRESSÃO -->
-    <a href="etiquetas.html" class="modulo-card" data-modulo="etiquetas">
-      <div class="modulo-icone">🏷️🖨️</div>
-      <h3>Etiquetas & Impressão</h3>
-      <p>Gere etiquetas operacionais, códigos PIX simbólicos, modelo para impressão e identificação de peças.</p>
-      <div class="badge-acesso">GERAR ETIQUETA →</div>
-    </a>
+      <p class="subtitulo">
+        Um espaço simples para registrar materiais, acompanhar mercadorias,
+        imprimir etiquetas e reconhecer cada peça pelo seu código.
+      </p>
 
-    <!-- OPERAÇÃO RÁPIDA (ALTERAÇÃO POR CÓDIGO) -->
-    <a href="alterar-produto.html" class="modulo-card" data-modulo="alterar">
-      <div class="modulo-icone">✏️⚡</div>
-      <h3>Alteração Rápida</h3>
-      <p>Localize qualquer produto por código e altere status, preço, descrição em tempo real para agilizar o dia a dia.</p>
-      <div class="badge-acesso">EDITAR POR CÓDIGO →</div>
-    </a>
+      <p class="frase">
+        Da mesa de trabalho ao sistema: cada peça ganha nome, registro e caminho.
+      </p>
 
-    <!-- RELATÓRIOS RESUMIDOS -->
-    <a href="relatorios.html" class="modulo-card" data-modulo="relatorios">
-      <div class="modulo-icone">📑📉</div>
-      <h3>Relatórios & Métricas</h3>
-      <p>Análises de giro de estoque, produtos mais valiosos, estatísticas por categoria e planejamento de produção.</p>
-      <div class="badge-acesso">VER RELATÓRIOS →</div>
-    </a>
-  </div>
+      <nav class="entradas" aria-label="Entradas principais do sistema">
+        <a class="botao registro" href="./registrar.html">
+          <strong>Registro</strong>
+          <span>Entrada de materiais e mercadorias</span>
+        </a>
 
-  <!-- BARRA DE STATUS DINÂMICA (mostra informações sobre o anfitrião e último acesso) -->
-  <div class="info-sistema" id="infoSistema">
-    <div class="estatistica-hub">
-      <div class="estatistica-item"><span>📌 Hub ativo:</span> <span id="versaoHub">Lucimar v2.0</span></div>
-      <div class="estatistica-item"><span>🕒 Último acesso:</span> <span id="ultimoAcesso">-</span></div>
-      <div class="estatistica-item"><span>🧵 Módulos conectados:</span> <span>6</span></div>
-    </div>
-    <button id="btnLimparCacheLocal" class="btn-acao-rapida">
-      🧹 Limpar cache de navegação
-    </button>
-  </div>
+        <a class="botao estoque" href="./dashboard.html">
+          <strong>Estoque</strong>
+          <span>Consulta, filtros, edição e etiquetas</span>
+        </a>
 
-  <!-- RODAPÉ com instruções -->
-  <div class="footer-hub">
-    <p>✨ Sistema local e offline-first — todos os módulos compartilham o mesmo localStorage. Os dados persistem no seu navegador.</p>
-    <p style="margin-top: 8px;">⚡ Para começar, clique em qualquer card acima. O hub central conecta todas as operações da confecção.</p>
-  </div>
-</div>
+        <a class="botao operacao" href="./operacao.html">
+          <strong>Operação / leitura</strong>
+          <span>Leitor, códigos e conferência rápida</span>
+        </a>
+      </nav>
 
-<script>
-  // ========== ANFITRIÃO DO SISTEMA ==========
-  // Função para mostrar mensagem temporária (toast)
-  function showMessage(text, isError = false) {
-    const existingToast = document.querySelector('.toast-message');
-    if(existingToast) existingToast.remove();
-    const toast = document.createElement('div');
-    toast.className = 'toast-message';
-    toast.textContent = text;
-    if(isError) toast.style.background = "#9b4d4d";
-    document.body.appendChild(toast);
-    setTimeout(() => {
-      toast.remove();
-    }, 2800);
-  }
-
-  // Atualizar informações de último acesso no hub
-  function atualizarInfoHub() {
-    const ultimo = localStorage.getItem("lucimar_ultimo_acesso_hub");
-    const agora = new Date().toLocaleString();
-    if(!ultimo) {
-      document.getElementById("ultimoAcesso").innerText = agora;
-    } else {
-      document.getElementById("ultimoAcesso").innerText = ultimo;
-    }
-    localStorage.setItem("lucimar_ultimo_acesso_hub", agora);
-  }
-
-  // Verificar consistência dos dados e avisar se não houver produtos de exemplo (sugestão)
-  function verificarBancoCentral() {
-    let produtos = localStorage.getItem("lucimar_confeccao_online");
-    if(!produtos) {
-      // cria produtos de exemplo para que o sistema já inicie com dados
-      const exemplos = [
-        { codigo: "EST_1001", nome: "Bolsa Cora", preco: 89.90, categoria: "Bolsa", status: "Em estoque", descricao: "Tecido canvas natural.", dataEntrada: new Date().toLocaleDateString(), fotoBase64: "" },
-        { codigo: "EST_1002", nome: "Almofada Linho", preco: 49.90, categoria: "Casa", status: "Em estoque", descricao: "Fronha 40x40 algodão cru.", dataEntrada: new Date().toLocaleDateString(), fotoBase64: "" },
-        { codigo: "EST_1003", nome: "Vestido Flora", preco: 129.90, categoria: "Vestido", status: "Em produção", descricao: "Tecido floral e alças reguláveis.", dataEntrada: new Date().toLocaleDateString(), fotoBase64: "" }
-      ];
-      localStorage.setItem("lucimar_confeccao_online", JSON.stringify(exemplos));
-      showMessage("📦 Dados iniciais carregados! Banco de produtos pronto.", false);
-    } else {
-      let parsed = JSON.parse(produtos);
-      if(parsed.length === 0) {
-        showMessage("⚠️ Nenhum produto encontrado. Use o módulo de Cadastro para adicionar itens.", false);
-      }
-    }
-  }
-
-  // função para limpar cache de navegação (somente dados do app)
-  function limparDadosApp() {
-    if(confirm("ATENÇÃO: Isso removerá TODOS os produtos, cadastros e configurações salvas no navegador. Deseja continuar?")) {
-      localStorage.removeItem("lucimar_confeccao_online");
-      localStorage.removeItem("lucimar_ultimo_acesso_hub");
-      // recria base mínima de exemplo novamente
-      const exemplos = [
-        { codigo: "EST_1001", nome: "Bolsa Cora", preco: 89.90, categoria: "Bolsa", status: "Em estoque", descricao: "Tecido canvas natural.", dataEntrada: new Date().toLocaleDateString(), fotoBase64: "" },
-        { codigo: "EST_1002", nome: "Almofada Linho", preco: 49.90, categoria: "Casa", status: "Em estoque", descricao: "Fronha 40x40 algodão cru.", dataEntrada: new Date().toLocaleDateString(), fotoBase64: "" }
-      ];
-      localStorage.setItem("lucimar_confeccao_online", JSON.stringify(exemplos));
-      showMessage("✅ Dados resetados com sucesso! O sistema foi reiniciado com produtos de exemplo.", false);
-      atualizarInfoHub();
-    }
-  }
-
-  // registrar clique para estatísticas amigáveis
-  function registrarNavegacaoModulos() {
-    const cards = document.querySelectorAll('.modulo-card');
-    cards.forEach(card => {
-      card.addEventListener('click', function(e) {
-        const moduloNome = this.getAttribute('data-modulo') || 'desconhecido';
-        // salvar estatística de acesso
-        let acessos = localStorage.getItem("lucimar_acessos_modulos");
-        let logs = {};
-        if(acessos) {
-          try { logs = JSON.parse(acessos); } catch(e){ logs = {}; }
-        }
-        logs[moduloNome] = (logs[moduloNome] || 0) + 1;
-        localStorage.setItem("lucimar_acessos_modulos", JSON.stringify(logs));
-        // pequeno efeito visual: mostra toast amigável
-        showMessage(`🔗 Redirecionando para ${moduloNome.toUpperCase()}...`, false);
-      });
-    });
-  }
-
-  // função que verifica se as páginas complementares existem (sugestão)
-  // caso não existam, exibe mensagem amigável e sugere criar
-  function verificarPaginasExistentes() {
-    const paginas = ['dashboard.html', 'cadastro.html', 'backup.html', 'etiquetas.html', 'alterar-produto.html', 'relatorios.html'];
-    paginas.forEach(pagina => {
-      fetch(pagina, { method: 'HEAD', cache: 'no-cache' })
-        .then(resp => {
-          if(!resp.ok && resp.status === 404) {
-            console.warn(`Página ${pagina} não encontrada, mas o hub continua funcional.`);
-            // Não exibe alerta para não poluir, mas podemos registrar
-          }
-        })
-        .catch(() => {});
-    });
-  }
-
-  // Sincroniza informações de relógio e conexão entre módulos
-  function atualizarRelogioDinamico() {
-    const agoraFormatado = new Date().toLocaleString();
-    const elemUltimo = document.getElementById("ultimoAcesso");
-    if(elemUltimo) elemUltimo.innerText = localStorage.getItem("lucimar_ultimo_acesso_hub") || agoraFormatado;
-  }
-
-  // Eventos adicionais e inicialização do HUB
-  document.addEventListener("DOMContentLoaded", () => {
-    atualizarInfoHub();
-    verificarBancoCentral();
-    verificarPaginasExistentes();
-    registrarNavegacaoModulos();
-    atualizarRelogioDinamico();
-
-    // Botão Limpar Cache Local
-    const btnLimpar = document.getElementById("btnLimparCacheLocal");
-    if(btnLimpar) {
-      btnLimpar.addEventListener("click", limparDadosApp);
-    }
-
-    // Adicionar pequena animação de boas vindas
-    setTimeout(() => {
-      showMessage("🧵 Bem-vinda ao Hub Lucimar! Clique nos cards para acessar os módulos.", false);
-    }, 800);
-  });
-
-  // Expõe função para debug (opcional)
-  window.hubLucimar = {
-    resetarDados: limparDadosApp,
-    versao: "2.0 - Anfitrião integrado"
-  };
-</script>
+      <footer class="rodape">
+        <p>
+          Sistema de apoio à produção — <strong>CNPJ 31.567.085/0001-18</strong>
+        </p>
+        <p>
+          Funciona como entrada estética do sistema. Os dados permanecem nos módulos internos.
+        </p>
+      </footer>
+    </section>
+  </main>
 </body>
 </html>
