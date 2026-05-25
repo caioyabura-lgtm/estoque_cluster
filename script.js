@@ -7,7 +7,7 @@
 const STORAGE_KEY = "estoque_lucimar";
 const CONFIG_ETIQUETA_KEY = "configEtiquetaTermica";
 const IMPRESSORA_KEY = "impressoraTermica";
-const URL_WEB_APP = "COLE_AQUI_A_URL_DO_APPS_SCRIPT_EXEC";
+const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbz-FKumfrxYo4LFHgXSdtK0EbHzwCB46Ty6UTrXTZ-dFzVE1xaBREHQhWiK8mfPuxA2fw/exec";
 
 const RESPONSAVEL_LEGAL = "LUCIMAR MARIA RODRIGUES";
 const CNPJ_RESPONSAVEL = "CNPJ 31.567.085/0001-18";
