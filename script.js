@@ -7,6 +7,7 @@
 const STORAGE_KEY = "estoque_lucimar";
 const CONFIG_ETIQUETA_KEY = "configEtiquetaTermica";
 const IMPRESSORA_KEY = "impressoraTermica";
+const URL_WEB_APP = "COLE_AQUI_A_URL_DO_APPS_SCRIPT_EXEC";
 
 const RESPONSAVEL_LEGAL = "LUCIMAR MARIA RODRIGUES";
 const CNPJ_RESPONSAVEL = "CNPJ 31.567.085/0001-18";
@@ -194,6 +195,88 @@ function excluirItemEstoque(codigo) {
   const codigoLimpo = String(codigo || "").trim();
   const atualizados = estoque.filter(item => String(item.codigo || "").trim() !== codigoLimpo);
   salvarEstoque(atualizados);
+}
+
+/* ==========================================================
+   GOOGLE SHEETS
+   ========================================================== */
+
+async function enviarItemParaGoogleSheets(item) {
+  if (!URL_WEB_APP || URL_WEB_APP.includes("COLE_AQUI")) {
+    throw new Error("URL_WEB_APP nao configurada.");
+  }
+
+  const resposta = await fetch(URL_WEB_APP, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "criar",
+      ...item
+    })
+  });
+
+  const texto = await resposta.text();
+
+  try {
+    return JSON.parse(texto);
+  } catch (erro) {
+    console.error("Resposta nao JSON do Apps Script:", texto);
+    throw erro;
+  }
+}
+
+function marcarItemSincronizado(codigo, sincronizado = true) {
+  const estoque = carregarEstoque();
+  const codigoNormalizado = normalizarCodigoBusca(codigo);
+
+  const atualizado = estoque.map(item => {
+    const mesmoItem =
+      normalizarCodigoBusca(item.codigo) === codigoNormalizado ||
+      normalizarCodigoBusca(item.codigoLeitura) === codigoNormalizado;
+
+    return mesmoItem
+      ? normalizarItem({
+          ...item,
+          sincronizado,
+          dataAtualizacao: hojeISO()
+        })
+      : item;
+  });
+
+  salvarEstoque(atualizado);
+}
+
+async function sincronizarItensComGoogleSheets(itens) {
+  const resultados = [];
+
+  for (const item of itens) {
+    try {
+      const resposta = await enviarItemParaGoogleSheets(item);
+
+      console.log("Google Sheets:", resposta);
+
+      if (resposta && resposta.ok) {
+        marcarItemSincronizado(item.codigo, true);
+        resultados.push({ codigo: item.codigo, ok: true });
+      } else {
+        marcarItemSincronizado(item.codigo, false);
+        resultados.push({
+          codigo: item.codigo,
+          ok: false,
+          erro: resposta && resposta.erro ? resposta.erro : "Resposta sem confirmacao."
+        });
+      }
+    } catch (erro) {
+      console.error("Falha ao enviar item para Google Sheets:", item.codigo, erro);
+      marcarItemSincronizado(item.codigo, false);
+      resultados.push({
+        codigo: item.codigo,
+        ok: false,
+        erro: String(erro)
+      });
+    }
+  }
+
+  return resultados;
 }
 
 function buscarItemPorCodigo(valor) {
@@ -705,14 +788,34 @@ function configurarFormularioCadastro() {
         return;
       }
 
-      const itens = gerarItensPorQuantidade(dados);
+      const itens = gerarItensPorQuantidade(dados).map(item => ({
+        ...item,
+        sincronizado: false
+      }));
+
       adicionarItensEstoque(itens);
 
-      alert(
+      let mensagem =
         itens.length === 1
-          ? `Registro salvo: ${itens[0].codigo}`
-          : `${itens.length} registros salvos:\n\n${itens.map(i => i.codigo).join("\n")}`
-      );
+          ? `Registro salvo localmente: ${itens[0].codigo}`
+          : `${itens.length} registros salvos localmente:\n\n${itens.map(i => i.codigo).join("\n")}`;
+
+      try {
+        const resultados = await sincronizarItensComGoogleSheets(itens);
+        const enviados = resultados.filter(r => r.ok).length;
+        const falhas = resultados.length - enviados;
+
+        if (falhas === 0) {
+          mensagem += "\n\nGoogle Sheets atualizado com sucesso.";
+        } else {
+          mensagem += `\n\n${enviados} enviados ao Google Sheets. ${falhas} ficaram apenas locais. Veja o console.`;
+        }
+      } catch (erro) {
+        console.error("Erro geral na sincronizacao com Google Sheets:", erro);
+        mensagem += "\n\nOs registros foram salvos localmente, mas nao foram enviados para a planilha.";
+      }
+
+      alert(mensagem);
 
       form.reset();
       configurarTipoPorUrl();
@@ -2609,6 +2712,18 @@ function configurarBotoesGlobais() {
   $("#testeCodigoBarrasCode39")?.addEventListener("click", testarEtiquetaCode39);
   $("#imprimirEtiquetasFonte")?.addEventListener("click", imprimirEtiquetasFonteLibreBarcode);
 
+  $("#testarConexaoSheets")?.addEventListener("click", async () => {
+    try {
+      const resposta = await fetch(URL_WEB_APP + "?action=listar");
+      const texto = await resposta.text();
+      console.log("Resposta Google Sheets:", texto);
+      alert("Conexao testada. Veja o console.");
+    } catch (erro) {
+      console.error("Erro ao testar Google Sheets:", erro);
+      alert("Falha ao conectar com Google Sheets.");
+    }
+  });
+
   $("#importarJson")?.addEventListener("change", event => {
     const arquivo = event.target.files?.[0];
     if (arquivo) importarJSONArquivo(arquivo);
@@ -2661,6 +2776,9 @@ window.lucimarEstoque = {
   buscarItemPorCodigo,
   buscarItemPorCodigoLeitura,
   atribuirCodigoLeitura,
+  enviarItemParaGoogleSheets,
+  sincronizarItensComGoogleSheets,
+  marcarItemSincronizado,
   normalizarCodigoBusca,
   normalizarPrecoVenda,
   formatarMoedaBR,
