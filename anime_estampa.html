@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Plano Americano | Câmera Cinematográfica</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            z-index: 100;
+            pointer-events: none;
+            backdrop-filter: blur(5px);
+            border-left: 3px solid #ffaa66;
+        }
+        .controles {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            color: #ffaa66;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            z-index: 100;
+            pointer-events: none;
+            border-left: 3px solid #ffaa66;
+        }
+        .zoom-value {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.85);
+            color: #66ffaa;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 100;
+            pointer-events: none;
+            text-align: center;
+            border: 1px solid #66ffaa;
+        }
+        .zoom-value span {
+            font-size: 22px;
+            color: #ffaa66;
+        }
+        .z-control {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 15px 10px;
+            border-radius: 30px;
+            z-index: 100;
+            pointer-events: none;
+            text-align: center;
+            border: 1px solid #ffaa66;
+        }
+        .z-control .label {
+            color: #ffaa66;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+        .z-control .value {
+            color: #66ffaa;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .gui-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #ccc;
+            z-index: 100;
+            pointer-events: none;
+            text-align: right;
+            border: 1px solid rgba(255,170,102,0.3);
+        }
+        @media (max-width: 768px) {
+            .zoom-value { font-size: 12px; padding: 8px 12px; }
+            .zoom-value span { font-size: 16px; }
+            .controles { font-size: 10px; padding: 8px 12px; }
+            #info { font-size: 9px; padding: 8px 12px; }
+            .z-control .value { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        🎬 PLANO AMERICANO | Câmera Cinematográfica<br>
+        🏠 Sala: 4m × 8m × 2.1m | Altura da câmera: 1.2m (altura dos joelhos)<br>
+        ⚪ 6 esferas | Raio: 2cm | Posições X,Y: -2,0,2
+    </div>
+    <div class="controles">
+        🖱️ SCROLL → Profundidade Z das esferas (0 a 2m)<br>
+        🔍 CTRL + SCROLL → Zoom da câmera (distância focal)
+    </div>
+    <div class="zoom-value">
+        🎥 DISTÂNCIA FOCAL<br>
+        <span id="zoomValue">50</span>mm
+    </div>
+    <div class="z-control">
+        <div class="label">📍 PROFUNDIDADE Z</div>
+        <div class="value" id="zValue">1.00m</div>
+    </div>
+    <div class="gui-panel">
+        🎬 ENQUADRAMENTO: PLANO AMERICANO<br>
+        📐 Câmera à altura dos joelhos (1.2m)<br>
+        🎯 Foco no centro da ação (0, 1.2, 0)
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // --- DIMENSÕES DA SALA ---
+        const LARGURA = 4.0;      // Eixo X: -2 a +2
+        const PROFUNDIDADE = 8.0; // Eixo Z: -4 a +4
+        const ALTURA = 2.1;       // Eixo Y: 0 a 2.1
+        
+        const LIMITE_X_MIN = -LARGURA / 2;
+        const LIMITE_X_MAX = LARGURA / 2;
+        
+        // --- CONFIGURAÇÃO DAS ESFERAS ---
+        const RAIO_ESFERA = 0.02;
+        const xValues = [-2, 0, 2];
+        const yValues = [0, 2];
+        
+        // --- CONTROLE DE Z ---
+        let zAtual = 1.0;
+        const Z_MIN = 0;
+        const Z_MAX = 2;
+        
+        // --- CONTROLE DE DISTÂNCIA FOCAL (zoom cinematográfico) ---
+        let distanciaFocal = 50;  // mm (35mm = grande angular, 85mm = tele)
+        const FOCAL_MIN = 24;
+        const FOCAL_MAX = 135;
+        
+        // --- PLANO AMERICANO: Câmera na altura dos joelhos (1.2m) ---
+        // Posição: afastada, ligeiramente descentrada para enquadrar melhor
+        const cameraPos = new THREE.Vector3(-2.5, 1.2, 3.5);
+        const pontoFoco = new THREE.Vector3(0, 1.2, 0.5);
+        
+        // --- CORES ---
+        const COR_PAREDE = 0xdddddd;
+        const COR_CHAO = 0x8B7355;
+        const COR_TETO = 0xeeeeee;
+        
+        // --- 1. CENA ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a2a);
+        scene.fog = new THREE.Fog(0x0a0a2a, 15, 30);
+        
+        // --- 2. CÂMERA (Plano Americano) ---
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.copy(cameraPos);
+        camera.lookAt(pontoFoco);
+        
+        // --- 3. RENDERIZADOR ---
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+        
+        // --- 4. LUZES ---
+        
+        // Luz ambiente
+        const ambientLight = new THREE.AmbientLight(0x404060, 0.7);
+        scene.add(ambientLight);
+        
+        // Luz principal (key light) - vinda da direita
+        const keyLight = new THREE.DirectionalLight(0xfff5e6, 1.0);
+        keyLight.position.set(2, 2.5, 1.5);
+        keyLight.castShadow = true;
+        keyLight.receiveShadow = true;
+        keyLight.shadow.mapSize.width = 2048;
+        keyLight.shadow.mapSize.height = 2048;
+        keyLight.shadow.camera.near = 0.5;
+        keyLight.shadow.camera.far = 10;
+        keyLight.shadow.camera.left = -3;
+        keyLight.shadow.camera.right = 3;
+        keyLight.shadow.camera.top = 3;
+        keyLight.shadow.camera.bottom = -3;
+        scene.add(keyLight);
+        
+        // Luz de preenchimento (fill light) - vinda da esquerda
+        const fillLight = new THREE.PointLight(0x6688aa, 0.4);
+        fillLight.position.set(-1.5, 1.5, 1);
+        scene.add(fillLight);
+        
+        // Luz de contraluz (back light) - para destacar as bordas
+        const backLight = new THREE.PointLight(0xffaa77, 0.35);
+        backLight.position.set(0, 1.5, -2);
+        scene.add(backLight);
+        
+        // Luz do teto
+        const topLight = new THREE.PointLight(0xffaa77, 0.3);
+        topLight.position.set(0, ALTURA - 0.2, 0);
+        scene.add(topLight);
+        
+        // Luz suave de fill geral
+        const rimLight = new THREE.PointLight(0x88aaff, 0.25);
+        rimLight.position.set(1, 1.2, 2);
+        scene.add(rimLight);
+        
+        // --- 5. PAREDES DA SALA ---
+        
+        function criarParede(largura, altura, profundidade, x, y, z, cor, rotacaoY = 0) {
+            const geometry = new THREE.BoxGeometry(largura, altura, profundidade);
+            const material = new THREE.MeshStandardMaterial({ 
+                color: cor,
+                roughness: 0.5,
+                metalness: 0.05,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.85
+            });
+            const parede = new THREE.Mesh(geometry, material);
+            parede.position.set(x, y, z);
+            parede.rotation.y = rotacaoY;
+            parede.receiveShadow = true;
+            parede.castShadow = true;
+            scene.add(parede);
+            return parede;
+        }
+        
+        criarParede(LARGURA, ALTURA, 0.1, 0, ALTURA/2, -PROFUNDIDADE/2, COR_PAREDE);
+        criarParede(LARGURA, ALTURA, 0.1, 0, ALTURA/2, PROFUNDIDADE/2, COR_PAREDE);
+        criarParede(0.1, ALTURA, PROFUNDIDADE, LIMITE_X_MIN, ALTURA/2, 0, COR_PAREDE);
+        criarParede(0.1, ALTURA, PROFUNDIDADE, LIMITE_X_MAX, ALTURA/2, 0, COR_PAREDE);
+        
+        // --- 6. CHÃO ---
+        const chaoGeometry = new THREE.PlaneGeometry(LARGURA, PROFUNDIDADE);
+        const chaoMaterial = new THREE.MeshStandardMaterial({ 
+            color: COR_CHAO, 
+            roughness: 0.8, 
+            metalness: 0.02,
+            side: THREE.DoubleSide
+        });
+        const chao = new THREE.Mesh(chaoGeometry, chaoMaterial);
+        chao.rotation.x = -Math.PI / 2;
+        chao.position.set(0, 0, 0);
+        chao.receiveShadow = true;
+        scene.add(chao);
+        
+        // --- 7. TETO ---
+        const tetoGeometry = new THREE.PlaneGeometry(LARGURA, PROFUNDIDADE);
+        const tetoMaterial = new THREE.MeshStandardMaterial({ color: COR_TETO, roughness: 0.5, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
+        const teto = new THREE.Mesh(tetoGeometry, tetoMaterial);
+        teto.rotation.x = Math.PI / 2;
+        teto.position.set(0, ALTURA, 0);
+        teto.receiveShadow = true;
+        scene.add(teto);
+        
+        // --- 8. LUMINÁRIA ---
+        const lampadaGeo = new THREE.SphereGeometry(0.1, 16, 16);
+        const lampadaMat = new THREE.MeshStandardMaterial({ color: 0xffeedd, emissive: 0xffaa66, emissiveIntensity: 0.25 });
+        const lampada = new THREE.Mesh(lampadaGeo, lampadaMat);
+        lampada.position.set(0, ALTURA - 0.08, 0);
+        lampada.castShadow = true;
+        scene.add(lampada);
+        
+        // --- 9. GRADE DE ESFERAS ---
+        const esferas = [];
+        const materialEsfera = new THREE.MeshStandardMaterial({
+            roughness: 0.2,
+            metalness: 0.8,
+            emissive: 0x004466,
+            emissiveIntensity: 0.2
+        });
+        
+        for (const x of xValues) {
+            for (const y of yValues) {
+                const geometry = new THREE.SphereGeometry(RAIO_ESFERA, 48, 48);
+                const esfera = new THREE.Mesh(geometry, materialEsfera.clone());
+                esfera.position.set(x, y, zAtual);
+                esfera.castShadow = true;
+                esfera.receiveShadow = true;
+                
+                const hue = 0.55 + (x / 5) * 0.15;
+                esfera.material.color.setHSL(hue, 0.8, 0.55);
+                
+                scene.add(esfera);
+                esferas.push(esfera);
+            }
+        }
+        
+        // --- GRADE DE REFERÊNCIA ---
+        const gridHelper = new THREE.GridHelper(LARGURA, 20, 0x886644, 0x886644);
+        gridHelper.position.y = 0.01;
+        gridHelper.material.transparent = true;
+        gridHelper.material.opacity = 0.2;
+        scene.add(gridHelper);
+        
+        // --- MARCADOR DO PONTO DE FOCO (auxiliar visual) ---
+        const markerGeo = new THREE.SphereGeometry(0.04, 16, 16);
+        const markerMat = new THREE.MeshStandardMaterial({ color: 0xffaa66, emissive: 0xff4411, emissiveIntensity: 0.4 });
+        const marker = new THREE.Mesh(markerGeo, markerMat);
+        marker.position.copy(pontoFoco);
+        scene.add(marker);
+        
+        // --- FUNÇÕES ---
+        function atualizarPosicaoZ(novoZ) {
+            novoZ = Math.min(Math.max(novoZ, Z_MIN), Z_MAX);
+            zAtual = novoZ;
+            esferas.forEach(esfera => {
+                esfera.position.z = zAtual;
+            });
+            document.getElementById('zValue').textContent = zAtual.toFixed(2) + 'm';
+        }
+        
+        function atualizarDistanciaFocal(novaFocal) {
+            novaFocal = Math.min(Math.max(novaFocal, FOCAL_MIN), FOCAL_MAX);
+            distanciaFocal = novaFocal;
+            
+            // Converter distância focal mm para FOV (campo de visão)
+            // Sensor full frame ~36mm
+            const sensorWidth = 36;
+            const fovRadianos = 2 * Math.atan(sensorWidth / (2 * distanciaFocal));
+            const fovGraus = fovRadianos * 180 / Math.PI;
+            
+            camera.fov = fovGraus;
+            camera.updateProjectionMatrix();
+            
+            document.getElementById('zoomValue').textContent = Math.round(distanciaFocal);
+        }
+        
+        // --- EVENTOS ---
+        let ctrlPressed = false;
+        
+        window.addEventListener('keydown', (e) => {
+            if (e.ctrlKey) ctrlPressed = true;
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'Control') ctrlPressed = false;
+        });
+        
+        window.addEventListener('wheel', (e) => {
+            if (ctrlPressed || e.ctrlKey) {
+                const delta = e.deltaY > 0 ? -2 : 2;
+                const novaFocal = distanciaFocal + delta;
+                atualizarDistanciaFocal(novaFocal);
+            } else {
+                const delta = e.deltaY > 0 ? -0.05 : 0.05;
+                const novoZ = zAtual + delta;
+                atualizarPosicaoZ(novoZ);
+            }
+            e.preventDefault();
+        }, { passive: false });
+        
+        // --- ANIMAÇÃO ---
+        let time = 0;
+        
+        function animate() {
+            time += 0.016;
+            
+            // Efeitos de luz
+            const intensity = 0.3 + Math.sin(time * 0.8) * 0.08;
+            topLight.intensity = intensity;
+            lampada.material.emissiveIntensity = 0.2 + Math.sin(time * 0.8) * 0.08;
+            
+            // Brilho pulsante nas esferas
+            esferas.forEach((esfera, idx) => {
+                const pulsar = 0.15 + Math.sin(time * 2.5 + idx) * 0.1;
+                esfera.material.emissiveIntensity = pulsar;
+            });
+            
+            // Marcador pisca
+            marker.material.emissiveIntensity = 0.3 + Math.sin(time * 3) * 0.2;
+            
+            // Renderizar
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        // --- AJUSTE DE TELA ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        document.body.style.overflow = 'hidden';
+        
+        console.log('🎬 PLANO AMERICANO ativado!');
+        console.log(`📍 Câmera: altura 1.2m (altura dos joelhos)`);
+        console.log(`🎯 Foco no ponto: (0, 1.2, 0.5)`);
+        console.log(`🎥 Distância focal inicial: ${distanciaFocal}mm`);
+        console.log(`📐 Lente equivalente a: ${distanciaFocal <= 35 ? 'Grande angular' : distanciaFocal >= 85 ? 'Teleobjetiva' : 'Normal'}`);
+    </script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUCIMAR — Entrada de materiais</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <section class="hero-panel compact">
+      <div class="hero-copy">
+        <p class="brand-kicker">LUCIMAR</p>
+        <p class="eyebrow">Entrada de materiais</p>
+        <h1>Registrar itens da confecção</h1>
+        <p class="subtitle">Cadastre tecidos, aviamentos, bolsas, peças em produção e produtos prontos com organização por lote, etapa e responsável.</p>
+      </div>
+      <div class="hero-side-note">
+        <p>Use a ficha para manter o estoque claro, prático e preparado para a produção.</p>
+      </div>
+    </section>
+
+    <section class="content-card">
+      <form id="formProduto" class="stacked-form">
+        <div class="form-grid">
+          <div class="field-block">
+            <label for="nome">Nome do item</label>
+            <input id="nome" name="nome" type="text" placeholder="Ex: Bolsa modelo / Tecido canvas" required>
+          </div>
+
+          <div class="field-block">
+            <label for="codigo">Código de barras / referência</label>
+            <input id="codigo" name="codigo" type="text" placeholder="Escaneie ou digite. Ex: 7891234567890" autocomplete="off">
+          </div>
+
+          <div class="field-block">
+            <label for="precoVenda">Preço de venda</label>
+            <input id="precoVenda" name="precoVenda" type="text" inputmode="decimal" placeholder="Ex: 49,90">
+          </div>
+
+          <div class="field-block">
+            <label for="categoria">Categoria</label>
+            <select id="categoria" name="categoria">
+              <option value="tecido">Tecido</option>
+              <option value="aviamento">Aviamento</option>
+              <option value="bolsa">Bolsa</option>
+              <option value="material">Material</option>
+              <option value="peça em produção">Peça em produção</option>
+              <option value="produto pronto">Produto pronto</option>
+            </select>
+          </div>
+
+          <div class="field-block">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="Em produção">Em produção</option>
+              <option value="Corte">Corte</option>
+              <option value="Costura">Costura</option>
+              <option value="Acabamento">Acabamento</option>
+              <option value="Em estoque">Em estoque</option>
+              <option value="Reservado">Reservado</option>
+              <option value="Vendido">Vendido</option>
+              <option value="Aguardando aprovação">Aguardando aprovação</option>
+              <option value="Com ajuste pendente">Com ajuste pendente</option>
+            </select>
+          </div>
+
+          <div class="field-block">
+            <label for="responsavel">Responsável</label>
+            <select id="responsavel" name="responsavel">
+              <option value="Caio Rodrigues">Caio Rodrigues</option>
+              <option value="Lucimar Maria Rodrigues">Lucimar Maria Rodrigues</option>
+              <option value="Tulio Rodrigues Mendes">Tulio Rodrigues Mendes</option>
+              <option value="Julia Rodrigues Mendes">Julia Rodrigues Mendes</option>
+              <option value="Carlos Alberto Mendes">Carlos Alberto Mendes</option>
+            </select>
+          </div>
+
+          <div class="field-block">
+            <label for="colaboradores">Colaboradores</label>
+            <input id="colaboradores" name="colaboradores" type="text" placeholder="Ex: Costura, acabamento">
+          </div>
+
+          <div class="field-block">
+            <label for="lote">Lote</label>
+            <input id="lote" name="lote" type="text" placeholder="Ex: LOTE-001">
+          </div>
+
+          <div class="field-block">
+            <label for="etapa">Etapa</label>
+            <select id="etapa" name="etapa">
+              <option value="Corte">Corte</option>
+              <option value="Costura">Costura</option>
+              <option value="Fechamento">Fechamento</option>
+              <option value="Acabamento">Acabamento</option>
+              <option value="Aguardando aprovação">Aguardando aprovação</option>
+              <option value="Finalizado">Finalizado</option>
+              <option value="Revisão / ajuste">Revisão / ajuste</option>
+            </select>
+          </div>
+
+          <div class="field-block">
+            <label for="quantidade">Quantidade</label>
+            <input id="quantidade" name="quantidade" type="number" min="1" value="1">
+          </div>
+
+          <div class="field-block">
+            <label for="foto">Foto (URL)</label>
+            <input id="foto" name="foto" type="url" placeholder="https://...">
+          </div>
+        </div>
+
+        <div class="field-block">
+          <label for="descricao">Descrição</label>
+          <textarea id="descricao" name="descricao" placeholder="Descreva material, acabamento, observações ou detalhes da peça."></textarea>
+        </div>
+
+        <div class="field-block">
+          <label for="observacoesInternas">Observações internas</label>
+          <textarea id="observacoesInternas" name="observacoesInternas" placeholder="Use esta área para anotações da produção ou pedidos especiais."></textarea>
+        </div>
+
+        <div class="button-row">
+          <button type="submit" class="button button-primary">Cadastrar item</button>
+          <button type="button" id="limparFormulario" class="button button-secondary">Limpar formulário</button>
+        </div>
+      </form>
+
+      <p id="msgCadastro" class="helper-text"></p>
+
+      <div class="page-nav">
+        <a href="index.html" class="button button-secondary">Início</a>
+        <a href="dashboard.html" class="button button-secondary">Estoque</a>
+        <a href="operacao.html" class="button button-secondary">Operação / leitura</a>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="./script.js"></script>
+</body>
+</html>

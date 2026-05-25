@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUCIMAR — Operação de confecção</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <section class="hero-panel compact">
+      <div class="hero-copy">
+        <p class="brand-kicker">LUCIMAR</p>
+        <p class="eyebrow">Operação / leitura</p>
+        <h1>Controle rápido da produção</h1>
+        <p class="subtitle">Leia códigos internos ou etiquetas livres para localizar itens, trocar status e atribuir etiquetas às mercadorias.</p>
+      </div>
+      <div class="hero-side-note">
+        <p>Prático para tecidos, aviamentos, bolsas e peças em produção.</p>
+      </div>
+    </section>
+
+    <section class="content-card">
+      <div class="form-grid">
+        <div class="field-block">
+          <label for="codigoOperacao">Escanear ou digitar código</label>
+          <input type="text" id="codigoOperacao" placeholder="Ex: CONF-001-001" autocomplete="off">
+        </div>
+
+        <div class="field-block">
+          <label>Atalhos da operação</label>
+          <div class="button-row">
+            <button type="button" id="buscarProdutoOperacao" class="button button-primary">Buscar produto</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="resultadoOperacao" class="result-panel">
+        <p>Escaneie ou digite um código para iniciar a operação.</p>
+      </div>
+
+      <div class="form-grid">
+        <div class="field-block">
+          <label for="codigoEtiquetaLivre">Código da etiqueta</label>
+          <input type="text" id="codigoEtiquetaLivre" placeholder="Ex: C009" autocomplete="off">
+        </div>
+
+        <div class="field-block">
+          <label for="codigoItemAtribuir">Mercadoria/material</label>
+          <input type="text" id="codigoItemAtribuir" placeholder="Código interno ou código atual" autocomplete="off">
+        </div>
+
+        <div class="field-block">
+          <label>Atribuição</label>
+          <div class="button-row">
+            <button type="button" id="atribuirCodigoEtiqueta" class="button button-primary">Atribuir a mercadoria</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="resultadoAtribuicaoCodigo" class="result-panel">
+        <p>Escaneie uma etiqueta livre e informe a mercadoria/material para vincular o código.</p>
+      </div>
+
+      <div class="page-nav">
+        <a href="index.html" class="button button-secondary">Início</a>
+        <a href="dashboard.html" class="button button-secondary">Estoque</a>
+        <a href="registrar.html" class="button button-secondary">Entrada de materiais</a>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="./script.js"></script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entregas</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0b0b0f;
+  color:white;
+  padding:32px;
+}
+
+.container{
+  max-width:900px;
+  margin:0 auto;
+}
+
+.card{
+  background:#17171d;
+  border:1px solid #2b2b35;
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:16px;
+}
+
+h1{margin-bottom:20px;}
+
+.btn{
+  text-decoration:none;
+  color:white;
+  border:1px solid #555;
+  padding:10px 16px;
+  border-radius:10px;
+  background:rgba(0,0,0,0.4);
+}
+
+.btn:hover{
+  background:rgba(255,255,255,0.1);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<a href="dashboard.html" class="btn">← Voltar</a>
+
+<h1>Entregas</h1>
+
+<div id="lista"></div>
+
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5Tv6UGvRAQZWkcwnHOPRQ2BpBVTyGkLBI7tgTK-k3dcvVSp7YDoeS_jcx9EJjrV1y/exec";
+
+async function carregar(){
+  let res = await fetch(SCRIPT_URL);
+  let dados = await res.json();
+
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  dados.forEach(item=>{
+    let div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <strong>${item.titulo || ""}</strong><br>
+      <small>${item.data || ""}</small><br><br>
+      ${item.descricao || ""}<br><br>
+      ${item.link ? `<a href="${item.link}" target="_blank">Abrir</a>` : ""}
+    `;
+
+    lista.appendChild(div);
+  });
+}
+
+carregar();
+</script>
+
+</body>
+</html>
